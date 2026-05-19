@@ -1,26 +1,65 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* peek pastel palette — easter eggs */
+
+  /* mints / cool greens — positive activations */
+  --color-mint-50: #f0fcf6;
+  --color-mint-100: #dff6e8;
+  --color-mint-200: #c8f4e1;
+  --color-mint-300: #baf4d7;
+  --color-mint-400: #c9f3d3;
+
+  /* skies / pale blues — secondary positive */
+  --color-sky-100: #e8f7f9;
+  --color-sky-200: #bbf0f4;
+  --color-sky-300: #a8e6ea;
+
+  /* lavender — attribution edges, "this matters" */
+  --color-lavender-100: #e6e9fb;
+  --color-lavender-200: #bcc7f4;
+  --color-lavender-300: #a3afea;
+
+  /* peach / warm pinks — negative activations, suppression */
+  --color-peach-100: #fdf3ea;
+  --color-peach-200: #f5e5d6;
+  --color-peach-300: #f4cdb2;
+
+  /* pinks — highlighted negative, alerts */
+  --color-pink-100: #fce4f1;
+  --color-pink-200: #f4aed6;
+  --color-pink-300: #ec92c4;
+
+  /* yellows — selected / highlighted state */
+  --color-cream-100: #fbf6dd;
+  --color-cream-200: #dfefc6;
+  --color-cream-300: #dbf4b5;
+
+  /* neutrals — text, surfaces */
+  --color-ink-900: #2d2d2d;
+  --color-ink-700: #4a4a4a;
+  --color-ink-500: #6b6b6b;
+  --color-ink-300: #9a9a9a;
+  --color-paper: #fdfcfa;
+  --color-cloud: #f6f4f0;
+
+  /* type */
+  --font-display: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", "Menlo", monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html, body {
+    background-color: var(--color-paper);
+    color: var(--color-ink-900);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  ::selection {
+    background-color: var(--color-lavender-200);
+    color: var(--color-ink-900);
+  }
 }
