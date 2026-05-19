@@ -5,11 +5,15 @@ export default function PlayPage() {
     <main className="relative min-h-screen overflow-hidden bg-paper text-ink-900">
       <div
         aria-hidden
-        className="pointer-events-none absolute top-1/4 left-1/4 h-[420px] w-[420px] rounded-full bg-mint-200 blur-3xl opacity-40"
+        className="pointer-events-none absolute -top-32 -left-32 h-[420px] w-[420px] rounded-full bg-mint-200 blur-3xl opacity-60"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute bottom-1/4 right-1/4 h-[420px] w-[420px] rounded-full bg-lavender-200 blur-3xl opacity-30"
+        className="pointer-events-none absolute top-1/3 -right-40 h-[480px] w-[480px] rounded-full bg-lavender-200 blur-3xl opacity-50"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-40 left-1/4 h-[440px] w-[440px] rounded-full bg-pink-200 blur-3xl opacity-40"
       />
 
       <SiteHeader />
@@ -28,7 +32,7 @@ export default function PlayPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr_280px]">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-[260px_1fr_280px]">
           {/* left: dataset + config — placeholder */}
           <aside className="rounded-2xl border border-ink-300/20 bg-white/60 p-5 backdrop-blur">
             <h2 className="font-mono text-xs uppercase tracking-wider text-ink-500">
