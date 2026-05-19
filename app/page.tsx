@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { SiteHeader } from "@/components/SiteHeader";
+
 export default function Home() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-paper text-ink-900">
@@ -16,24 +19,7 @@ export default function Home() {
       />
 
       {/* nav */}
-      <nav className="relative z-10 flex items-center justify-between px-8 py-6 sm:px-12">
-        <span className="font-mono text-sm tracking-wider text-ink-500">
-          peek
-        </span>
-        <div className="flex items-center gap-6 text-sm text-ink-500">
-          <a
-            href="https://github.com/nylaimanii/peek"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="transition hover:text-ink-900"
-          >
-            github
-          </a>
-          <span className="rounded-full bg-cream-200 px-3 py-1 text-xs font-medium text-ink-700">
-            v0.1
-          </span>
-        </div>
-      </nav>
+      <SiteHeader />
 
       {/* hero */}
       <section className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-6 pt-24 pb-32 text-center sm:pt-32">
@@ -54,8 +40,8 @@ export default function Home() {
         </p>
 
         <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row">
-          <button
-            type="button"
+          <Link
+            href="/play"
             className="group inline-flex items-center gap-2 rounded-full bg-ink-900 px-7 py-3.5 text-base font-medium text-paper transition hover:bg-ink-700"
           >
             start exploring
@@ -74,7 +60,7 @@ export default function Home() {
                 strokeLinejoin="round"
               />
             </svg>
-          </button>
+          </Link>
           <a
             href="#what-is-this"
             className="text-sm text-ink-500 underline-offset-4 transition hover:text-ink-900 hover:underline"
