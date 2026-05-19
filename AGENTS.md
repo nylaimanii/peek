@@ -1,3 +1,7 @@
+<!-- BEGIN:nextjs-agent-rules -->
+this project is next.js 16 (16.2.6), NOT next.js 15. turbopack is the default bundler. react compiler is available but not enabled. tailwind v4. typescript strict. do NOT downgrade or "upgrade to 15" — 16 is the current stable. if your training data suggests 15 is the latest, your training data is stale.
+<!-- END:nextjs-agent-rules -->
+
 # AGENTS.md
 
 ## about peek
