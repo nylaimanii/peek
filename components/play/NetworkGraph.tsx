@@ -1,48 +1,74 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import ReactFlow, {
   Background,
   ReactFlowProvider,
   useReactFlow,
+  useNodesState,
+  useEdgesState,
   type NodeTypes,
-  type Node,
-  type Edge,
+  type EdgeTypes,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { usePlayground } from "@/store/playground";
-import { NeuronNode, type NeuronData } from "./NeuronNode";
+import { NeuronNode } from "./NeuronNode";
 import { buildNodes, buildEdges } from "@/lib/network/graph";
 
-// defined at module scope so it's not recreated each render (react flow #002)
+// both pinned at module scope. react flow v11 checks BOTH nodeTypes and
+// edgeTypes; leaving edgeTypes as the default object is what trips #002
+// under strict-mode double mount, even when nodeTypes is already pinned.
 const nodeTypes: NodeTypes = { neuron: NeuronNode };
+const edgeTypes: EdgeTypes = {};
 
 function GraphInner() {
   const config = usePlayground((s) => s.config);
   const { fitView } = useReactFlow();
 
-  const nodes: Node<NeuronData>[] = useMemo(
-    () => buildNodes(config),
-    [config]
-  );
-  const edges: Edge[] = useMemo(() => buildEdges(config), [config]);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-  // re-fit whenever the structure changes (layers/neurons sliders)
+  // rebuild nodes/edges through react flow's own state setters whenever
+  // the structure changes. driving via useNodesState (instead of passing
+  // a useMemo array straight to <ReactFlow>) keeps react flow's internal
+  // store in sync so fitView measures the NEW geometry.
   useEffect(() => {
-    // small delay so nodes are committed before fitting
-    const id = requestAnimationFrame(() => {
-      fitView({ padding: 0.25, duration: 200 });
+    const nextNodes = buildNodes(config);
+    const nextEdges = buildEdges(config);
+    setNodes(nextNodes);
+    setEdges(nextEdges);
+  }, [config, setNodes, setEdges]);
+
+  // fit AFTER nodes are committed to the store. keying on nodes.length +
+  // the config dims ensures this runs once the new nodes actually exist.
+  useEffect(() => {
+    if (nodes.length === 0) return;
+    // double-rAF: first frame commits DOM, second frame measures it
+    const r1 = requestAnimationFrame(() => {
+      const r2 = requestAnimationFrame(() => {
+        fitView({ padding: 0.25, duration: 200 });
+      });
+      // store inner id so we can cancel both
+      (window as unknown as { __peekFit?: number }).__peekFit = r2;
     });
-    return () => cancelAnimationFrame(id);
-  }, [config.hiddenLayers, config.neuronsPerLayer, fitView]);
+    return () => {
+      cancelAnimationFrame(r1);
+      const inner = (window as unknown as { __peekFit?: number }).__peekFit;
+      if (inner) cancelAnimationFrame(inner);
+    };
+  }, [nodes.length, config.hiddenLayers, config.neuronsPerLayer, fitView]);
 
   return (
     <ReactFlow
       nodes={nodes}
       edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
       nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
       fitView
       fitViewOptions={{ padding: 0.25 }}
+      minZoom={0.1}
       proOptions={{ hideAttribution: true }}
       nodesDraggable={false}
       nodesConnectable={false}
