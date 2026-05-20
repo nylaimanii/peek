@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Controls } from "@/components/play/Controls";
 import { DataScatter } from "@/components/play/DataScatter";
 import { LossCurve } from "@/components/play/LossCurve";
+import { NetworkGraph } from "@/components/play/NetworkGraph";
 import { usePlayground } from "@/store/playground";
 import { generateDataset, datasetToTensors } from "@/lib/network/datasets";
 import { buildModel } from "@/lib/network/model";
@@ -96,19 +97,31 @@ export default function PlayPage() {
             <Controls onTrain={handleTrain} />
           </aside>
 
-          {/* center: data scatter (network graph comes in step 10) */}
-          <div className="flex min-h-[480px] flex-col items-center justify-center gap-4 rounded-2xl border border-ink-300/20 bg-white/60 p-6 backdrop-blur">
-            <span className="font-mono text-xs uppercase tracking-wider text-ink-500">
-              data
-            </span>
-            <DataScatter data={data} size={280} />
-            <span className="text-xs text-ink-300">
-              network graph viz arrives in the next build
-            </span>
+          {/* center: network graph */}
+          <div className="flex min-h-[480px] flex-col rounded-2xl border border-ink-300/20 bg-white/60 backdrop-blur">
+            <div className="flex items-center justify-between border-b border-ink-300/15 px-5 py-3">
+              <span className="font-mono text-xs uppercase tracking-wider text-ink-500">
+                network
+              </span>
+              <span className="font-mono text-xs text-ink-300">
+                {config.hiddenLayers} hidden {config.hiddenLayers === 1 ? "layer" : "layers"} · {config.neuronsPerLayer} neurons
+              </span>
+            </div>
+            <div className="relative flex-1">
+              <NetworkGraph />
+            </div>
           </div>
 
           {/* right: output */}
           <aside className="flex flex-col gap-5 rounded-2xl border border-ink-300/20 bg-white/60 p-5 backdrop-blur">
+            <div>
+              <h2 className="font-mono text-xs uppercase tracking-wider text-ink-500">
+                data
+              </h2>
+              <div className="mt-3 flex justify-center">
+                <DataScatter data={data} size={220} />
+              </div>
+            </div>
             <div>
               <h2 className="font-mono text-xs uppercase tracking-wider text-ink-500">
                 output
