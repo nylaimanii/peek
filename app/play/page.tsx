@@ -1,6 +1,65 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import * as tf from "@tensorflow/tfjs";
 import { SiteHeader } from "@/components/SiteHeader";
+import { Controls } from "@/components/play/Controls";
+import { DataScatter } from "@/components/play/DataScatter";
+import { LossCurve } from "@/components/play/LossCurve";
+import { usePlayground } from "@/store/playground";
+import { generateDataset, datasetToTensors } from "@/lib/network/datasets";
+import { buildModel } from "@/lib/network/model";
+import { trainModel } from "@/lib/network/train";
 
 export default function PlayPage() {
+  const {
+    dataset,
+    noise,
+    nPoints,
+    data,
+    setData,
+    config,
+    epochs,
+    status,
+    currentEpoch,
+    loss,
+    accuracy,
+    lossHistory,
+    accHistory,
+    startTraining,
+    pushTrainingStep,
+    finishTraining,
+  } = usePlayground();
+
+  const trainingRef = useRef(false);
+
+  // regenerate data whenever dataset or noise changes
+  useEffect(() => {
+    setData(generateDataset(dataset, nPoints, noise));
+  }, [dataset, noise, nPoints, setData]);
+
+  async function handleTrain() {
+    if (trainingRef.current) return;
+    trainingRef.current = true;
+
+    startTraining();
+
+    const { xs, ys } = datasetToTensors(data);
+    const model = buildModel(config);
+
+    await trainModel(model, xs, ys, epochs, 32, (s) => {
+      pushTrainingStep(s.epoch, s.loss, s.accuracy);
+    });
+
+    finishTraining();
+
+    xs.dispose();
+    ys.dispose();
+    model.dispose();
+    trainingRef.current = false;
+    console.log("backend:", tf.getBackend());
+  }
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-paper text-ink-900">
       <div
@@ -27,41 +86,75 @@ export default function PlayPage() {
             train a network
           </h1>
           <p className="mt-3 max-w-xl text-base text-ink-500">
-            pick a dataset, choose how the network is wired up, then watch
-            it learn. coming next step — for now this is a placeholder.
+            pick a dataset, wire up the network, then watch it learn.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-[260px_1fr_280px]">
-          {/* left: dataset + config — placeholder */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-[280px_1fr_300px]">
+          {/* left: controls */}
           <aside className="rounded-2xl border border-ink-300/20 bg-white/60 p-5 backdrop-blur">
-            <h2 className="font-mono text-xs uppercase tracking-wider text-ink-500">
-              data
-            </h2>
-            <div className="mt-3 text-sm text-ink-500">
-              dataset picker + network config will live here.
-            </div>
+            <Controls onTrain={handleTrain} />
           </aside>
 
-          {/* center: network graph — placeholder */}
-          <div className="flex min-h-[480px] items-center justify-center rounded-2xl border border-ink-300/20 bg-white/60 backdrop-blur">
-            <div className="text-center">
-              <div className="font-mono text-xs uppercase tracking-wider text-ink-300">
-                network
-              </div>
-              <div className="mt-2 text-sm text-ink-500">
-                react flow canvas goes here in step 8
-              </div>
-            </div>
+          {/* center: data scatter (network graph comes in step 10) */}
+          <div className="flex min-h-[480px] flex-col items-center justify-center gap-4 rounded-2xl border border-ink-300/20 bg-white/60 p-6 backdrop-blur">
+            <span className="font-mono text-xs uppercase tracking-wider text-ink-500">
+              data
+            </span>
+            <DataScatter data={data} size={280} />
+            <span className="text-xs text-ink-300">
+              network graph viz arrives in the next build
+            </span>
           </div>
 
-          {/* right: output / loss curve — placeholder */}
-          <aside className="rounded-2xl border border-ink-300/20 bg-white/60 p-5 backdrop-blur">
-            <h2 className="font-mono text-xs uppercase tracking-wider text-ink-500">
-              output
-            </h2>
-            <div className="mt-3 text-sm text-ink-500">
-              decision boundary + loss curve will live here.
+          {/* right: output */}
+          <aside className="flex flex-col gap-5 rounded-2xl border border-ink-300/20 bg-white/60 p-5 backdrop-blur">
+            <div>
+              <h2 className="font-mono text-xs uppercase tracking-wider text-ink-500">
+                output
+              </h2>
+            </div>
+
+            <div className="font-mono text-sm">
+              <div className="flex justify-between text-ink-500">
+                <span>status</span>
+                <span className="text-ink-900">{status}</span>
+              </div>
+              <div className="mt-1 flex justify-between text-ink-500">
+                <span>epoch</span>
+                <span className="text-ink-900">
+                  {status === "idle" ? "—" : `${currentEpoch + 1} / ${epochs}`}
+                </span>
+              </div>
+              <div className="mt-1 flex justify-between text-ink-500">
+                <span>loss</span>
+                <span className="text-pink-300">
+                  {status === "idle" ? "—" : loss.toFixed(4)}
+                </span>
+              </div>
+              <div className="mt-1 flex justify-between text-ink-500">
+                <span>accuracy</span>
+                <span className="text-mint-300">
+                  {status === "idle" ? "—" : `${(accuracy * 100).toFixed(1)}%`}
+                </span>
+              </div>
+            </div>
+
+            <LossCurve
+              lossHistory={lossHistory}
+              accHistory={accHistory}
+              width={260}
+              height={120}
+            />
+            <div className="flex items-center gap-3 text-xs text-ink-500">
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full bg-pink-300" />
+                loss
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full bg-mint-300" />
+                accuracy
+              </span>
             </div>
           </aside>
         </div>
