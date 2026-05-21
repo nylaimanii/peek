@@ -149,7 +149,24 @@ export const usePlayground = create<PlaygroundState>((set) => ({
 
   toggleFeature: (key) =>
     set((s) => {
-      if (key === "x" || key === "y") return s; // always on
+      if (key === "x" || key === "y") return s;
+      // dispose any live trained model — its input dim is about to change
+      try {
+        s.trainedModel?.dispose();
+      } catch {
+        /* already disposed */
+      }
+      try {
+        s.activationReaders?.forEach((r) => {
+          try {
+            r.dispose();
+          } catch {
+            /* already disposed */
+          }
+        });
+      } catch {
+        /* ignore */
+      }
       const has = s.activeFeatures.includes(key);
       const next = has
         ? s.activeFeatures.filter((k) => k !== key)
@@ -159,6 +176,8 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         status: "idle",
         selectedPoint: null,
         activations: null,
+        trainedModel: null,
+        activationReaders: null,
       };
     }),
 

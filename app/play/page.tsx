@@ -54,9 +54,23 @@ export default function PlayPage() {
 
     // dispose any previous trained model + readers before retraining
     const prev = usePlayground.getState();
-    if (prev.trainedModel) prev.trainedModel.dispose();
-    if (prev.activationReaders) {
-      prev.activationReaders.forEach((r) => r.dispose());
+    try {
+      if (prev.trainedModel) prev.trainedModel.dispose();
+    } catch {
+      // already disposed — ignore
+    }
+    try {
+      if (prev.activationReaders) {
+        prev.activationReaders.forEach((r) => {
+          try {
+            r.dispose();
+          } catch {
+            // reader already disposed — ignore
+          }
+        });
+      }
+    } catch {
+      // ignore
     }
     setTrainedModel(null, null);
 
