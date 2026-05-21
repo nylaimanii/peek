@@ -20,7 +20,7 @@ export function DataScatter({
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}
-      className="rounded-xl bg-white/70"
+      className="rounded-xl"
     >
       <line
         x1={size / 2}

@@ -7,12 +7,14 @@ import { Controls } from "@/components/play/Controls";
 import { DataScatter } from "@/components/play/DataScatter";
 import { LossCurve } from "@/components/play/LossCurve";
 import { NetworkGraph } from "@/components/play/NetworkGraph";
+import { BoundaryCanvas } from "@/components/play/BoundaryCanvas";
 import { usePlayground } from "@/store/playground";
 import { generateDataset } from "@/lib/network/datasets";
 import { buildModel } from "@/lib/network/model";
 import { trainModel } from "@/lib/network/train";
 import { buildActivationReaders, readActivations } from "@/lib/network/activations";
 import { featureVector, dataToFeatureTensors } from "@/lib/network/features";
+import { predictGrid } from "@/lib/network/predict";
 
 export default function PlayPage() {
   const {
@@ -39,6 +41,9 @@ export default function PlayPage() {
     setSelectedPoint,
     setActivations,
     activeFeatures,
+    predictionGrid,
+    gridRes,
+    setPredictionGrid,
   } = usePlayground();
 
   const trainingRef = useRef(false);
@@ -88,6 +93,10 @@ export default function PlayPage() {
     // build activation readers and KEEP the model alive for the flow view
     const readers = buildActivationReaders(model);
     setTrainedModel(model, readers);
+
+    // compute the decision-boundary grid for the heatmap behind the scatter
+    const grid = predictGrid(model, activeFeatures, usePlayground.getState().gridRes);
+    setPredictionGrid(grid);
 
     xs.dispose();
     ys.dispose();
@@ -153,20 +162,27 @@ export default function PlayPage() {
               <h2 className="font-mono text-xs uppercase tracking-wider text-ink-500">
                 data
               </h2>
-              <div className="mt-3 flex justify-center">
-                <DataScatter
-                  data={data}
+              <div className="relative mx-auto mt-3" style={{ width: 220, height: 220 }}>
+                <BoundaryCanvas
+                  grid={predictionGrid}
+                  res={gridRes}
                   size={220}
-                  selected={selectedPoint}
-                  onSelect={(p) => {
-                    setSelectedPoint(p);
-                    if (activationReaders) {
-                      const fv = featureVector(p.x, p.y, activeFeatures);
-                      const acts = readActivations(activationReaders, fv);
-                      setActivations(acts);
-                    }
-                  }}
                 />
+                <div className="absolute inset-0">
+                  <DataScatter
+                    data={data}
+                    size={220}
+                    selected={selectedPoint}
+                    onSelect={(p) => {
+                      setSelectedPoint(p);
+                      if (activationReaders) {
+                        const fv = featureVector(p.x, p.y, activeFeatures);
+                        const acts = readActivations(activationReaders, fv);
+                        setActivations(acts);
+                      }
+                    }}
+                  />
+                </div>
               </div>
               {trainedModel && !selectedPoint && (
                 <p className="mt-2 text-center text-xs text-ink-300">

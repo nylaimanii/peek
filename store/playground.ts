@@ -59,6 +59,11 @@ interface PlaygroundState {
   activeFeatures: import("@/lib/network/features").FeatureKey[];
   toggleFeature: (key: import("@/lib/network/features").FeatureKey) => void;
 
+  // decision boundary
+  predictionGrid: Float32Array | null;
+  gridRes: number;
+  setPredictionGrid: (grid: Float32Array | null) => void;
+
   // actions
   setDataset: (d: DatasetName) => void;
   setNoise: (n: number) => void;
@@ -111,6 +116,9 @@ export const usePlayground = create<PlaygroundState>((set) => ({
 
   activeFeatures: DEFAULT_FEATURES,
 
+  predictionGrid: null,
+  gridRes: 50,
+
   setDataset: (d) =>
     set((s) => {
       disposeLiveModel(s);
@@ -121,6 +129,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         activations: null,
         trainedModel: null,
         activationReaders: null,
+        predictionGrid: null,
       };
     }),
   setNoise: (n) => set({ noise: n }),
@@ -135,6 +144,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         activations: null,
         trainedModel: null,
         activationReaders: null,
+        predictionGrid: null,
       };
     }),
   removeLayer: () =>
@@ -148,6 +158,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         activations: null,
         trainedModel: null,
         activationReaders: null,
+        predictionGrid: null,
       };
     }),
   incNeuron: (layerIdx) =>
@@ -163,6 +174,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         activations: null,
         trainedModel: null,
         activationReaders: null,
+        predictionGrid: null,
       };
     }),
   decNeuron: (layerIdx) =>
@@ -178,6 +190,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         activations: null,
         trainedModel: null,
         activationReaders: null,
+        predictionGrid: null,
       };
     }),
   setActivation: (a) =>
@@ -190,6 +203,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         activations: null,
         trainedModel: null,
         activationReaders: null,
+        predictionGrid: null,
       };
     }),
   setLearningRate: (lr) =>
@@ -201,6 +215,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
     set({ trainedModel: model, activationReaders: readers }),
   setSelectedPoint: (p) => set({ selectedPoint: p }),
   setActivations: (a) => set({ activations: a }),
+  setPredictionGrid: (grid) => set({ predictionGrid: grid }),
 
   toggleFeature: (key) =>
     set((s) => {
@@ -217,6 +232,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         activations: null,
         trainedModel: null,
         activationReaders: null,
+        predictionGrid: null,
       };
     }),
 
@@ -230,6 +246,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       accHistory: [],
       selectedPoint: null,
       activations: null,
+      predictionGrid: null,
     }),
   pushTrainingStep: (epoch, loss, acc) =>
     set((s) => ({
@@ -250,5 +267,6 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       accHistory: [],
       selectedPoint: null,
       activations: null,
+      predictionGrid: null,
     }),
 }));
