@@ -11,6 +11,7 @@ import { usePlayground } from "@/store/playground";
 import { generateDataset, datasetToTensors } from "@/lib/network/datasets";
 import { buildModel } from "@/lib/network/model";
 import { trainModel } from "@/lib/network/train";
+import { buildActivationReaders, readActivations } from "@/lib/network/activations";
 
 export default function PlayPage() {
   const {
@@ -30,6 +31,12 @@ export default function PlayPage() {
     startTraining,
     pushTrainingStep,
     finishTraining,
+    trainedModel,
+    activationReaders,
+    selectedPoint,
+    setTrainedModel,
+    setSelectedPoint,
+    setActivations,
   } = usePlayground();
 
   const trainingRef = useRef(false);
@@ -43,6 +50,14 @@ export default function PlayPage() {
     if (trainingRef.current) return;
     trainingRef.current = true;
 
+    // dispose any previous trained model + readers before retraining
+    const prev = usePlayground.getState();
+    if (prev.trainedModel) prev.trainedModel.dispose();
+    if (prev.activationReaders) {
+      prev.activationReaders.forEach((r) => r.dispose());
+    }
+    setTrainedModel(null, null);
+
     startTraining();
 
     const { xs, ys } = datasetToTensors(data);
@@ -54,9 +69,13 @@ export default function PlayPage() {
 
     finishTraining();
 
+    // build activation readers and KEEP the model alive for the flow view
+    const readers = buildActivationReaders(model);
+    setTrainedModel(model, readers);
+
     xs.dispose();
     ys.dispose();
-    model.dispose();
+    // NOTE: model is intentionally NOT disposed — needed for activations
     trainingRef.current = false;
     console.log("backend:", tf.getBackend());
   }
@@ -119,8 +138,29 @@ export default function PlayPage() {
                 data
               </h2>
               <div className="mt-3 flex justify-center">
-                <DataScatter data={data} size={220} />
+                <DataScatter
+                  data={data}
+                  size={220}
+                  selected={selectedPoint}
+                  onSelect={(p) => {
+                    setSelectedPoint(p);
+                    if (activationReaders) {
+                      const acts = readActivations(activationReaders, p.x, p.y);
+                      setActivations(acts);
+                    }
+                  }}
+                />
               </div>
+              {trainedModel && !selectedPoint && (
+                <p className="mt-2 text-center text-xs text-ink-300">
+                  click a point to watch it flow through the network
+                </p>
+              )}
+              {selectedPoint && (
+                <p className="mt-2 text-center text-xs text-ink-500">
+                  showing activations for ({selectedPoint.x.toFixed(2)}, {selectedPoint.y.toFixed(2)})
+                </p>
+              )}
             </div>
             <div>
               <h2 className="font-mono text-xs uppercase tracking-wider text-ink-500">

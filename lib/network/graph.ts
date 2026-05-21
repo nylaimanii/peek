@@ -22,7 +22,10 @@ export function layerSizes(config: NetworkConfig): number[] {
  * positions neurons in vertical columns, one column per layer,
  * vertically centered. returns react flow nodes.
  */
-export function buildNodes(config: NetworkConfig): Node<NeuronData>[] {
+export function buildNodes(
+  config: NetworkConfig,
+  activations?: number[][] | null
+): Node<NeuronData>[] {
   const sizes = layerSizes(config);
   const maxCount = Math.max(...sizes);
   const totalHeight = maxCount * ROW_GAP;
@@ -46,6 +49,15 @@ export function buildNodes(config: NetworkConfig): Node<NeuronData>[] {
       if (kind === "input") label = i === 0 ? "x" : "y";
       if (kind === "output") label = "ŷ";
 
+      let activation: number | undefined = undefined;
+      if (activations && kind !== "input") {
+        // graph layerIdx L (1-based for hidden) maps to activations[L-1]
+        const actLayer = activations[layerIdx - 1];
+        if (actLayer && actLayer[i] !== undefined) {
+          activation = actLayer[i];
+        }
+      }
+
       nodes.push({
         id,
         type: "neuron",
@@ -53,7 +65,7 @@ export function buildNodes(config: NetworkConfig): Node<NeuronData>[] {
           x: layerIdx * COL_GAP,
           y: yOffset + i * ROW_GAP,
         },
-        data: { kind, label },
+        data: { kind, label, activation },
         draggable: false,
         connectable: false,
         selectable: false,

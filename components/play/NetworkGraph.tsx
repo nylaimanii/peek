@@ -23,6 +23,7 @@ const edgeTypes: EdgeTypes = {};
 
 function GraphInner() {
   const config = usePlayground((s) => s.config);
+  const activations = usePlayground((s) => s.activations);
   const { fitView } = useReactFlow();
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -33,11 +34,11 @@ function GraphInner() {
   // a useMemo array straight to <ReactFlow>) keeps react flow's internal
   // store in sync so fitView measures the NEW geometry.
   useEffect(() => {
-    const nextNodes = buildNodes(config);
+    const nextNodes = buildNodes(config, activations);
     const nextEdges = buildEdges(config);
     setNodes(nextNodes);
     setEdges(nextEdges);
-  }, [config, setNodes, setEdges]);
+  }, [config, activations, setNodes, setEdges]);
 
   // fit AFTER nodes are committed to the store. keying on nodes.length +
   // the config dims ensures this runs once the new nodes actually exist.

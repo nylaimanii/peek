@@ -23,6 +23,12 @@ interface PlaygroundState {
   lossHistory: number[];
   accHistory: number[];
 
+  // trained model + interpretability
+  trainedModel: import("@tensorflow/tfjs").LayersModel | null;
+  activationReaders: import("@tensorflow/tfjs").LayersModel[] | null;
+  selectedPoint: { x: number; y: number } | null;
+  activations: number[][] | null; // [layer][neuron]
+
   // actions
   setDataset: (d: DatasetName) => void;
   setNoise: (n: number) => void;
@@ -32,6 +38,13 @@ interface PlaygroundState {
   setLearningRate: (lr: number) => void;
   setEpochs: (e: number) => void;
   setData: (d: DataPoint[]) => void;
+
+  setTrainedModel: (
+    model: import("@tensorflow/tfjs").LayersModel | null,
+    readers: import("@tensorflow/tfjs").LayersModel[] | null
+  ) => void;
+  setSelectedPoint: (p: { x: number; y: number } | null) => void;
+  setActivations: (a: number[][] | null) => void;
 
   startTraining: () => void;
   pushTrainingStep: (epoch: number, loss: number, acc: number) => void;
@@ -60,6 +73,11 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   lossHistory: [],
   accHistory: [],
 
+  trainedModel: null,
+  activationReaders: null,
+  selectedPoint: null,
+  activations: null,
+
   setDataset: (d) => set({ dataset: d, status: "idle" }),
   setNoise: (n) => set({ noise: n }),
   setHiddenLayers: (n) =>
@@ -73,6 +91,11 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   setEpochs: (e) => set({ epochs: e }),
   setData: (d) => set({ data: d }),
 
+  setTrainedModel: (model, readers) =>
+    set({ trainedModel: model, activationReaders: readers }),
+  setSelectedPoint: (p) => set({ selectedPoint: p }),
+  setActivations: (a) => set({ activations: a }),
+
   startTraining: () =>
     set({
       status: "training",
@@ -81,6 +104,8 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       accuracy: 0,
       lossHistory: [],
       accHistory: [],
+      selectedPoint: null,
+      activations: null,
     }),
   pushTrainingStep: (epoch, loss, acc) =>
     set((s) => ({
@@ -99,5 +124,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       accuracy: 0,
       lossHistory: [],
       accHistory: [],
+      selectedPoint: null,
+      activations: null,
     }),
 }));
