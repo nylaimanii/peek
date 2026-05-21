@@ -26,6 +26,7 @@ function GraphInner() {
   const config = usePlayground((s) => s.config);
   const activations = usePlayground((s) => s.activations);
   const activeFeatures = usePlayground((s) => s.activeFeatures);
+  const weights = usePlayground((s) => s.weights);
   const { fitView } = useReactFlow();
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -38,10 +39,10 @@ function GraphInner() {
   useEffect(() => {
     const inputLabels = activeFeatureLabels(activeFeatures);
     const nextNodes = buildNodes(config, inputLabels, activations);
-    const nextEdges = buildEdges(config, inputLabels.length);
+    const nextEdges = buildEdges(config, inputLabels.length, weights);
     setNodes(nextNodes);
     setEdges(nextEdges);
-  }, [config, activations, activeFeatures, setNodes, setEdges]);
+  }, [config, activations, activeFeatures, weights, setNodes, setEdges]);
 
   // fit AFTER nodes are committed to the store. keying on nodes.length +
   // the config dims ensures this runs once the new nodes actually exist.

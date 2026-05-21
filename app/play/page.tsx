@@ -15,6 +15,7 @@ import { trainModel } from "@/lib/network/train";
 import { buildActivationReaders, readActivations } from "@/lib/network/activations";
 import { featureVector, dataToFeatureTensors } from "@/lib/network/features";
 import { predictGrid } from "@/lib/network/predict";
+import { extractWeights } from "@/lib/network/graph";
 
 export default function PlayPage() {
   const {
@@ -44,6 +45,8 @@ export default function PlayPage() {
     predictionGrid,
     gridRes,
     setPredictionGrid,
+    weights,
+    setWeights,
   } = usePlayground();
 
   const trainingRef = useRef(false);
@@ -97,6 +100,7 @@ export default function PlayPage() {
     // compute the decision-boundary grid for the heatmap behind the scatter
     const grid = predictGrid(model, activeFeatures, usePlayground.getState().gridRes);
     setPredictionGrid(grid);
+    setWeights(extractWeights(model));
 
     xs.dispose();
     ys.dispose();
@@ -150,6 +154,16 @@ export default function PlayPage() {
               <span className="font-mono text-xs text-ink-300">
                 {config.neuronCounts.length} hidden {config.neuronCounts.length === 1 ? "layer" : "layers"} · [{config.neuronCounts.join(", ")}]
               </span>
+              {weights && (
+                <span className="ml-3 flex items-center gap-2 font-mono text-[10px] text-ink-300">
+                  <span className="flex items-center gap-1">
+                    <span className="inline-block h-0.5 w-3 bg-mint-300" />+
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="inline-block h-0.5 w-3 bg-pink-300" />−
+                  </span>
+                </span>
+              )}
             </div>
             <div className="relative flex-1">
               <NetworkGraph />

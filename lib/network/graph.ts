@@ -76,7 +76,11 @@ export function buildNodes(
 /**
  * fully connects each layer to the next (dense). returns react flow edges.
  */
-export function buildEdges(config: NetworkConfig, inputCount: number): Edge[] {
+export function buildEdges(
+  config: NetworkConfig,
+  inputCount: number,
+  weights?: number[][][] | null
+): Edge[] {
   const sizes = layerSizes(config, inputCount);
   const edges: Edge[] = [];
 
@@ -85,20 +89,54 @@ export function buildEdges(config: NetworkConfig, inputCount: number): Edge[] {
     const toCount = sizes[layerIdx + 1];
     for (let i = 0; i < fromCount; i++) {
       for (let j = 0; j < toCount; j++) {
+        let stroke = "var(--color-ink-300)";
+        let strokeWidth = 0.75;
+        let opacity = 0.35;
+
+        if (weights && weights[layerIdx]) {
+          const w = weights[layerIdx][i]?.[j];
+          if (w !== undefined) {
+            const clamped = Math.max(-3, Math.min(3, w));
+            const mag = Math.min(1, Math.abs(clamped) / 3);
+            stroke =
+              clamped >= 0
+                ? "var(--color-mint-300)"
+                : "var(--color-pink-300)";
+            strokeWidth = 0.5 + mag * 3; // 0.5..3.5
+            opacity = 0.25 + mag * 0.55; // 0.25..0.8
+          }
+        }
+
         edges.push({
           id: `e${layerIdx}-${i}-${j}`,
           source: `${layerIdx}-${i}`,
           target: `${layerIdx + 1}-${j}`,
           type: "straight",
-          style: {
-            stroke: "var(--color-ink-300)",
-            strokeWidth: 0.75,
-            opacity: 0.35,
-          },
+          style: { stroke, strokeWidth, opacity },
         });
       }
     }
   }
 
   return edges;
+}
+
+/**
+ * extracts dense-layer weight matrices from a trained model.
+ * returns weights[layerIdx] = 2D array [fromNeuron][toNeuron].
+ * layerIdx 0 = input→firstHidden, ... last = lastHidden→output.
+ */
+export function extractWeights(
+  model: import("@tensorflow/tfjs").LayersModel
+): number[][][] {
+  const matrices: number[][][] = [];
+  for (const layer of model.layers) {
+    const w = layer.getWeights();
+    if (w.length === 0) continue;
+    // w[0] = kernel (weight matrix), shape [fromDim, toDim]
+    const kernel = w[0];
+    const arr = kernel.arraySync() as number[][];
+    matrices.push(arr);
+  }
+  return matrices;
 }

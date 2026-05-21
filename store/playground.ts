@@ -64,6 +64,10 @@ interface PlaygroundState {
   gridRes: number;
   setPredictionGrid: (grid: Float32Array | null) => void;
 
+  // learned weights (for edge coloring)
+  weights: number[][][] | null;
+  setWeights: (w: number[][][] | null) => void;
+
   // actions
   setDataset: (d: DatasetName) => void;
   setNoise: (n: number) => void;
@@ -118,6 +122,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
 
   predictionGrid: null,
   gridRes: 50,
+  weights: null,
 
   setDataset: (d) =>
     set((s) => {
@@ -130,6 +135,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         trainedModel: null,
         activationReaders: null,
         predictionGrid: null,
+        weights: null,
       };
     }),
   setNoise: (n) => set({ noise: n }),
@@ -145,6 +151,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         trainedModel: null,
         activationReaders: null,
         predictionGrid: null,
+        weights: null,
       };
     }),
   removeLayer: () =>
@@ -159,6 +166,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         trainedModel: null,
         activationReaders: null,
         predictionGrid: null,
+        weights: null,
       };
     }),
   incNeuron: (layerIdx) =>
@@ -175,6 +183,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         trainedModel: null,
         activationReaders: null,
         predictionGrid: null,
+        weights: null,
       };
     }),
   decNeuron: (layerIdx) =>
@@ -191,6 +200,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         trainedModel: null,
         activationReaders: null,
         predictionGrid: null,
+        weights: null,
       };
     }),
   setActivation: (a) =>
@@ -204,6 +214,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         trainedModel: null,
         activationReaders: null,
         predictionGrid: null,
+        weights: null,
       };
     }),
   setLearningRate: (lr) =>
@@ -216,6 +227,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   setSelectedPoint: (p) => set({ selectedPoint: p }),
   setActivations: (a) => set({ activations: a }),
   setPredictionGrid: (grid) => set({ predictionGrid: grid }),
+  setWeights: (w) => set({ weights: w }),
 
   toggleFeature: (key) =>
     set((s) => {
@@ -233,6 +245,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         trainedModel: null,
         activationReaders: null,
         predictionGrid: null,
+        weights: null,
       };
     }),
 
@@ -247,6 +260,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       selectedPoint: null,
       activations: null,
       predictionGrid: null,
+      weights: null,
     }),
   pushTrainingStep: (epoch, loss, acc) =>
     set((s) => ({
@@ -268,5 +282,6 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       selectedPoint: null,
       activations: null,
       predictionGrid: null,
+      weights: null,
     }),
 }));
