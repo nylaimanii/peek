@@ -10,6 +10,11 @@ const DATASETS: { id: DatasetName; label: string }[] = [
   { id: "xor", label: "xor" },
   { id: "gaussian", label: "gaussian" },
   { id: "spiral", label: "spiral" },
+  { id: "moons", label: "moons" },
+  { id: "rings", label: "rings" },
+  { id: "checkerboard", label: "checker" },
+  { id: "stripes", label: "stripes" },
+  { id: "eye", label: "eye" },
 ];
 
 const ACTIVATIONS: ActivationName[] = ["tanh", "relu", "sigmoid"];
@@ -59,9 +64,12 @@ export function Controls({ onTrain }: { onTrain: () => void }) {
             </button>
           ))}
         </div>
-        {dataset === "spiral" && (
+        {(dataset === "spiral" ||
+          dataset === "checkerboard" ||
+          dataset === "rings" ||
+          dataset === "eye") && (
           <p className="mt-2 text-xs text-pink-300">
-            spiral is hard — needs lots of neurons/layers + ~1000 epochs.
+            this one is hard — add layers, neurons, or engineered features.
           </p>
         )}
       </div>
