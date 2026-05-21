@@ -8,6 +8,7 @@ import { DataScatter } from "@/components/play/DataScatter";
 import { LossCurve } from "@/components/play/LossCurve";
 import { NetworkGraph } from "@/components/play/NetworkGraph";
 import { BoundaryCanvas } from "@/components/play/BoundaryCanvas";
+import { NeuronInspector } from "@/components/play/NeuronInspector";
 import { usePlayground } from "@/store/playground";
 import { generateDataset } from "@/lib/network/datasets";
 import { buildModel } from "@/lib/network/model";
@@ -256,6 +257,8 @@ export default function PlayPage() {
                 accuracy
               </span>
             </div>
+
+            <NeuronInspector />
           </aside>
         </div>
       </section>

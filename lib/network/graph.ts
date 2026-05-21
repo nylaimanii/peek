@@ -62,7 +62,14 @@ export function buildNodes(
           x: layerIdx * COL_GAP,
           y: yOffset + i * ROW_GAP,
         },
-        data: { kind, label, activation },
+        data: {
+          kind,
+          label,
+          activation,
+          ...(kind !== "input"
+            ? { layerIdx: layerIdx - 1, neuronIdx: i }
+            : {}),
+        },
         draggable: false,
         connectable: false,
         selectable: false,

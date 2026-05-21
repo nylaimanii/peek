@@ -68,6 +68,18 @@ interface PlaygroundState {
   weights: number[][][] | null;
   setWeights: (w: number[][][] | null) => void;
 
+  // hovered neuron (for per-neuron decision boundary inspector)
+  hoveredNeuron: {
+    layerIdx: number;
+    neuronIdx: number;
+    label: string;
+    grid: Float32Array;
+    min: number;
+    max: number;
+    res: number;
+  } | null;
+  setHoveredNeuron: (n: PlaygroundState["hoveredNeuron"]) => void;
+
   // actions
   setDataset: (d: DatasetName) => void;
   setNoise: (n: number) => void;
@@ -123,6 +135,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   predictionGrid: null,
   gridRes: 50,
   weights: null,
+  hoveredNeuron: null,
 
   setDataset: (d) =>
     set((s) => {
@@ -136,6 +149,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         activationReaders: null,
         predictionGrid: null,
         weights: null,
+        hoveredNeuron: null,
       };
     }),
   setNoise: (n) => set({ noise: n }),
@@ -152,6 +166,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         activationReaders: null,
         predictionGrid: null,
         weights: null,
+        hoveredNeuron: null,
       };
     }),
   removeLayer: () =>
@@ -167,6 +182,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         activationReaders: null,
         predictionGrid: null,
         weights: null,
+        hoveredNeuron: null,
       };
     }),
   incNeuron: (layerIdx) =>
@@ -184,6 +200,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         activationReaders: null,
         predictionGrid: null,
         weights: null,
+        hoveredNeuron: null,
       };
     }),
   decNeuron: (layerIdx) =>
@@ -201,6 +218,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         activationReaders: null,
         predictionGrid: null,
         weights: null,
+        hoveredNeuron: null,
       };
     }),
   setActivation: (a) =>
@@ -215,6 +233,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         activationReaders: null,
         predictionGrid: null,
         weights: null,
+        hoveredNeuron: null,
       };
     }),
   setLearningRate: (lr) =>
@@ -228,6 +247,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   setActivations: (a) => set({ activations: a }),
   setPredictionGrid: (grid) => set({ predictionGrid: grid }),
   setWeights: (w) => set({ weights: w }),
+  setHoveredNeuron: (n) => set({ hoveredNeuron: n }),
 
   toggleFeature: (key) =>
     set((s) => {
@@ -246,6 +266,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         activationReaders: null,
         predictionGrid: null,
         weights: null,
+        hoveredNeuron: null,
       };
     }),
 
@@ -261,6 +282,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       activations: null,
       predictionGrid: null,
       weights: null,
+      hoveredNeuron: null,
     }),
   pushTrainingStep: (epoch, loss, acc) =>
     set((s) => ({
@@ -283,5 +305,6 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       activations: null,
       predictionGrid: null,
       weights: null,
+      hoveredNeuron: null,
     }),
 }));

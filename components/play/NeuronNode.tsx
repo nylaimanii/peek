@@ -4,6 +4,10 @@ export type NeuronData = {
   label?: string;
   kind: "input" | "hidden" | "output";
   activation?: number;
+  /** dense-layer index (0 = first hidden); undefined for input */
+  layerIdx?: number;
+  /** index within the layer */
+  neuronIdx?: number;
 };
 
 /**

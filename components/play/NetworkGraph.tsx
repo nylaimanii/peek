@@ -15,6 +15,7 @@ import { usePlayground } from "@/store/playground";
 import { NeuronNode } from "./NeuronNode";
 import { buildNodes, buildEdges } from "@/lib/network/graph";
 import { activeFeatureLabels } from "@/lib/network/features";
+import { neuronActivationGrid } from "@/lib/network/activations";
 
 // both pinned at module scope. react flow v11 checks BOTH nodeTypes and
 // edgeTypes; leaving edgeTypes as the default object is what trips #002
@@ -27,7 +28,35 @@ function GraphInner() {
   const activations = usePlayground((s) => s.activations);
   const activeFeatures = usePlayground((s) => s.activeFeatures);
   const weights = usePlayground((s) => s.weights);
+  const activationReaders = usePlayground((s) => s.activationReaders);
+  const setHoveredNeuron = usePlayground((s) => s.setHoveredNeuron);
   const { fitView } = useReactFlow();
+
+  const onNodeMouseEnter = (
+    _e: React.MouseEvent,
+    node: { data: { layerIdx?: number; neuronIdx?: number; label?: string; kind?: string } }
+  ) => {
+    const { layerIdx, neuronIdx } = node.data;
+    if (layerIdx === undefined || neuronIdx === undefined) return;
+    if (!activationReaders) return;
+    const { grid, min, max } = neuronActivationGrid(
+      activationReaders,
+      layerIdx,
+      neuronIdx,
+      activeFeatures,
+      40
+    );
+    setHoveredNeuron({
+      layerIdx,
+      neuronIdx,
+      label: node.data.label || `L${layerIdx + 1} n${neuronIdx + 1}`,
+      grid,
+      min,
+      max,
+      res: 40,
+    });
+  };
+  const onNodeMouseLeave = () => setHoveredNeuron(null);
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -69,6 +98,8 @@ function GraphInner() {
       edges={edges}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
+      onNodeMouseEnter={onNodeMouseEnter}
+      onNodeMouseLeave={onNodeMouseLeave}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
       fitView
