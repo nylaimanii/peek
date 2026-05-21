@@ -5,6 +5,31 @@ import { DEFAULT_FEATURES } from "@/lib/network/features";
 
 export type TrainingStatus = "idle" | "training" | "done";
 
+// safely disposes a live tf model + activation readers. used by any
+// action that invalidates the trained model (dataset/feature/arch/
+// activation change). guards against double-dispose.
+function disposeLiveModel(s: {
+  trainedModel: import("@tensorflow/tfjs").LayersModel | null;
+  activationReaders: import("@tensorflow/tfjs").LayersModel[] | null;
+}) {
+  try {
+    s.trainedModel?.dispose();
+  } catch {
+    /* already disposed */
+  }
+  try {
+    s.activationReaders?.forEach((r) => {
+      try {
+        r.dispose();
+      } catch {
+        /* already disposed */
+      }
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
 interface PlaygroundState {
   // dataset
   dataset: DatasetName;
@@ -86,29 +111,43 @@ export const usePlayground = create<PlaygroundState>((set) => ({
 
   activeFeatures: DEFAULT_FEATURES,
 
-  setDataset: (d) => set({ dataset: d, status: "idle" }),
+  setDataset: (d) =>
+    set((s) => {
+      disposeLiveModel(s);
+      return {
+        dataset: d,
+        status: "idle",
+        selectedPoint: null,
+        activations: null,
+        trainedModel: null,
+        activationReaders: null,
+      };
+    }),
   setNoise: (n) => set({ noise: n }),
   addLayer: () =>
     set((s) => {
       if (s.config.neuronCounts.length >= 6) return s;
+      disposeLiveModel(s);
       return {
         config: { ...s.config, neuronCounts: [...s.config.neuronCounts, 4] },
         status: "idle",
         selectedPoint: null,
         activations: null,
+        trainedModel: null,
+        activationReaders: null,
       };
     }),
   removeLayer: () =>
     set((s) => {
       if (s.config.neuronCounts.length <= 1) return s;
+      disposeLiveModel(s);
       return {
-        config: {
-          ...s.config,
-          neuronCounts: s.config.neuronCounts.slice(0, -1),
-        },
+        config: { ...s.config, neuronCounts: s.config.neuronCounts.slice(0, -1) },
         status: "idle",
         selectedPoint: null,
         activations: null,
+        trainedModel: null,
+        activationReaders: null,
       };
     }),
   incNeuron: (layerIdx) =>
@@ -116,11 +155,14 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       const next = [...s.config.neuronCounts];
       if (next[layerIdx] >= 12) return s;
       next[layerIdx] += 1;
+      disposeLiveModel(s);
       return {
         config: { ...s.config, neuronCounts: next },
         status: "idle",
         selectedPoint: null,
         activations: null,
+        trainedModel: null,
+        activationReaders: null,
       };
     }),
   decNeuron: (layerIdx) =>
@@ -128,15 +170,28 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       const next = [...s.config.neuronCounts];
       if (next[layerIdx] <= 1) return s;
       next[layerIdx] -= 1;
+      disposeLiveModel(s);
       return {
         config: { ...s.config, neuronCounts: next },
         status: "idle",
         selectedPoint: null,
         activations: null,
+        trainedModel: null,
+        activationReaders: null,
       };
     }),
   setActivation: (a) =>
-    set((s) => ({ config: { ...s.config, activation: a }, status: "idle" })),
+    set((s) => {
+      disposeLiveModel(s);
+      return {
+        config: { ...s.config, activation: a },
+        status: "idle",
+        selectedPoint: null,
+        activations: null,
+        trainedModel: null,
+        activationReaders: null,
+      };
+    }),
   setLearningRate: (lr) =>
     set((s) => ({ config: { ...s.config, learningRate: lr } })),
   setEpochs: (e) => set({ epochs: e }),
@@ -150,23 +205,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   toggleFeature: (key) =>
     set((s) => {
       if (key === "x" || key === "y") return s;
-      // dispose any live trained model — its input dim is about to change
-      try {
-        s.trainedModel?.dispose();
-      } catch {
-        /* already disposed */
-      }
-      try {
-        s.activationReaders?.forEach((r) => {
-          try {
-            r.dispose();
-          } catch {
-            /* already disposed */
-          }
-        });
-      } catch {
-        /* ignore */
-      }
+      disposeLiveModel(s);
       const has = s.activeFeatures.includes(key);
       const next = has
         ? s.activeFeatures.filter((k) => k !== key)
