@@ -4,7 +4,7 @@ peek inside a neural network.
 
 most tools show you a neural net *learning*. peek shows you what it actually *learned*. train a tiny network in your browser, then poke around inside it — watch a single data point flow through the neurons, hover any neuron to see what it detects, untangle which connections matter. it's tensorflow playground for the mechanistic interpretability era, in pastel.
 
-no install, no setup, no phd. just open it and start clicking.
+no install, just open it and start clicking.
 
 **live:** [peek-two.vercel.app](https://peek-two.vercel.app)
 
