@@ -93,7 +93,7 @@ export function HeroPreview() {
             />
           ))}
           {/* neurons */}
-          {nodes.map((n, i) => {
+          {nodes.map((n) => {
             const fill =
               n.kind === "input"
                 ? "var(--color-lavender-200)"
@@ -106,12 +106,16 @@ export function HeroPreview() {
                 : n.kind === "output"
                 ? "var(--color-pink-300)"
                 : "var(--color-mint-300)";
+            const s = nodeR * 2; // square side
             return (
-              <circle
+              <rect
                 key={`${n.layer}-${n.idx}`}
-                cx={n.x}
-                cy={n.y}
-                r={nodeR}
+                x={n.x - nodeR}
+                y={n.y - nodeR}
+                width={s}
+                height={s}
+                rx={6}
+                ry={6}
                 fill={fill}
                 stroke={stroke}
                 strokeWidth={1.5}
@@ -120,7 +124,6 @@ export function HeroPreview() {
                   animationDelay: `${(n.layer * 0.4 + n.idx * 0.18).toFixed(2)}s`,
                   transformOrigin: `${n.x}px ${n.y}px`,
                 }}
-                rx={4}
               />
             );
           })}

@@ -6,7 +6,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "peek — peek inside a neural network",
   description:
-    "an interactive intro to mechanistic interpretability. train a tiny neural net in your browser, then peel it apart with the techniques used at the frontier of AI research.",
+    "an interactive intro to mechanistic interpretability. train a tiny neural network in your browser, then trace a data point through it, hover any neuron to see what it detects, and watch the decision boundary form.",
 };
 
 export default function RootLayout({
