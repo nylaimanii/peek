@@ -29,3 +29,7 @@ next.js 16 (app router), typescript, tailwind v4, tensorflow.js, react flow, d3,
 ## current build phase
 
 scaffolding (steps 1-6 of a 30-step build). do not add features outside the current step without asking.
+
+## known non-issues (do not re-investigate)
+
+- **React Flow #002 warning** ("you've created a new nodeTypes or edgeTypes object") fires 2× in dev on /play. this is a known React Flow v11 + React strict-mode false positive. both nodeTypes and edgeTypes ARE pinned at module scope in NetworkGraph.tsx — the warning is triggered by strict-mode's double-mount, not by an actual recreated object. it does NOT fire in production builds and has no functional impact (no extra re-renders). do not downgrade React Flow, disable strict mode, or migrate to v12 to chase this — not worth it.
