@@ -20,8 +20,10 @@ export function Controls({ onTrain }: { onTrain: () => void }) {
     noise,
     setNoise,
     config,
-    setHiddenLayers,
-    setNeuronsPerLayer,
+    addLayer,
+    removeLayer,
+    incNeuron,
+    decNeuron,
     setActivation,
     setLearningRate,
     epochs,
@@ -56,7 +58,7 @@ export function Controls({ onTrain }: { onTrain: () => void }) {
         </div>
         {dataset === "spiral" && (
           <p className="mt-2 text-xs text-pink-300">
-            spiral is hard — needs ~1000 epochs + 3 layers to crack.
+            spiral is hard — needs lots of neurons/layers + ~1000 epochs.
           </p>
         )}
       </div>
@@ -78,38 +80,66 @@ export function Controls({ onTrain }: { onTrain: () => void }) {
         />
       </div>
 
-      {/* hidden layers */}
+      {/* per-layer architecture */}
       <div>
-        <label className="font-mono text-xs uppercase tracking-wider text-ink-500">
-          hidden layers: {config.hiddenLayers}
-        </label>
-        <input
-          type="range"
-          min={1}
-          max={4}
-          step={1}
-          value={config.hiddenLayers}
-          disabled={training}
-          onChange={(e) => setHiddenLayers(parseInt(e.target.value))}
-          className="mt-2 w-full accent-mint-300 disabled:opacity-40"
-        />
-      </div>
+        <div className="flex items-center justify-between">
+          <h2 className="font-mono text-xs uppercase tracking-wider text-ink-500">
+            architecture
+          </h2>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={removeLayer}
+              disabled={training || config.neuronCounts.length <= 1}
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-ink-300/30 bg-white/60 text-ink-700 transition hover:border-pink-200 disabled:opacity-30"
+              title="remove last layer"
+            >
+              −
+            </button>
+            <span className="font-mono text-xs text-ink-500">
+              {config.neuronCounts.length} {config.neuronCounts.length === 1 ? "layer" : "layers"}
+            </span>
+            <button
+              onClick={addLayer}
+              disabled={training || config.neuronCounts.length >= 6}
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-ink-300/30 bg-white/60 text-ink-700 transition hover:border-mint-200 disabled:opacity-30"
+              title="add a layer"
+            >
+              +
+            </button>
+          </div>
+        </div>
 
-      {/* neurons per layer */}
-      <div>
-        <label className="font-mono text-xs uppercase tracking-wider text-ink-500">
-          neurons / layer: {config.neuronsPerLayer}
-        </label>
-        <input
-          type="range"
-          min={2}
-          max={16}
-          step={1}
-          value={config.neuronsPerLayer}
-          disabled={training}
-          onChange={(e) => setNeuronsPerLayer(parseInt(e.target.value))}
-          className="mt-2 w-full accent-mint-300 disabled:opacity-40"
-        />
+        <div className="mt-3 flex flex-col gap-2">
+          {config.neuronCounts.map((count, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between rounded-lg border border-ink-300/15 bg-white/50 px-3 py-2"
+            >
+              <span className="font-mono text-xs text-ink-500">
+                layer {i + 1}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => decNeuron(i)}
+                  disabled={training || count <= 1}
+                  className="flex h-6 w-6 items-center justify-center rounded-md border border-ink-300/30 bg-white/70 text-ink-700 transition hover:border-pink-200 disabled:opacity-30"
+                >
+                  −
+                </button>
+                <span className="w-6 text-center font-mono text-sm text-ink-900">
+                  {count}
+                </span>
+                <button
+                  onClick={() => incNeuron(i)}
+                  disabled={training || count >= 12}
+                  className="flex h-6 w-6 items-center justify-center rounded-md border border-ink-300/30 bg-white/70 text-ink-700 transition hover:border-mint-200 disabled:opacity-30"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* activation */}
@@ -169,7 +199,7 @@ export function Controls({ onTrain }: { onTrain: () => void }) {
         />
       </div>
 
-      {/* train button */}
+      {/* train */}
       <button
         onClick={onTrain}
         disabled={training}

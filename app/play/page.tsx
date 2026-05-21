@@ -123,7 +123,7 @@ export default function PlayPage() {
                 network
               </span>
               <span className="font-mono text-xs text-ink-300">
-                {config.hiddenLayers} hidden {config.hiddenLayers === 1 ? "layer" : "layers"} · {config.neuronsPerLayer} neurons
+                {config.neuronCounts.length} hidden {config.neuronCounts.length === 1 ? "layer" : "layers"} · [{config.neuronCounts.join(", ")}]
               </span>
             </div>
             <div className="relative flex-1">

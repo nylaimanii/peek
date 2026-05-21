@@ -11,11 +11,8 @@ const NODE_SIZE = 44;
  * input is always 2 (x, y), output is always 1 (binary prob).
  */
 export function layerSizes(config: NetworkConfig): number[] {
-  const hidden = Array.from(
-    { length: config.hiddenLayers },
-    () => config.neuronsPerLayer
-  );
-  return [2, ...hidden, 1];
+  // input is 2 (x,y) for now; output is 1. hidden = neuronCounts.
+  return [2, ...config.neuronCounts, 1];
 }
 
 /**

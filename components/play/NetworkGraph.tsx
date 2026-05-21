@@ -57,7 +57,7 @@ function GraphInner() {
       const inner = (window as unknown as { __peekFit?: number }).__peekFit;
       if (inner) cancelAnimationFrame(inner);
     };
-  }, [nodes.length, config.hiddenLayers, config.neuronsPerLayer, fitView]);
+  }, [nodes.length, config.neuronCounts, fitView]);
 
   return (
     <ReactFlow

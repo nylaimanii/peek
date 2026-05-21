@@ -32,8 +32,10 @@ interface PlaygroundState {
   // actions
   setDataset: (d: DatasetName) => void;
   setNoise: (n: number) => void;
-  setHiddenLayers: (n: number) => void;
-  setNeuronsPerLayer: (n: number) => void;
+  addLayer: () => void;
+  removeLayer: () => void;
+  incNeuron: (layerIdx: number) => void;
+  decNeuron: (layerIdx: number) => void;
   setActivation: (a: ActivationName) => void;
   setLearningRate: (lr: number) => void;
   setEpochs: (e: number) => void;
@@ -59,8 +61,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   data: [],
 
   config: {
-    hiddenLayers: 2,
-    neuronsPerLayer: 6,
+    neuronCounts: [6, 6],
     activation: "tanh",
     learningRate: 0.03,
   },
@@ -80,10 +81,53 @@ export const usePlayground = create<PlaygroundState>((set) => ({
 
   setDataset: (d) => set({ dataset: d, status: "idle" }),
   setNoise: (n) => set({ noise: n }),
-  setHiddenLayers: (n) =>
-    set((s) => ({ config: { ...s.config, hiddenLayers: n }, status: "idle" })),
-  setNeuronsPerLayer: (n) =>
-    set((s) => ({ config: { ...s.config, neuronsPerLayer: n }, status: "idle" })),
+  addLayer: () =>
+    set((s) => {
+      if (s.config.neuronCounts.length >= 6) return s;
+      return {
+        config: { ...s.config, neuronCounts: [...s.config.neuronCounts, 4] },
+        status: "idle",
+        selectedPoint: null,
+        activations: null,
+      };
+    }),
+  removeLayer: () =>
+    set((s) => {
+      if (s.config.neuronCounts.length <= 1) return s;
+      return {
+        config: {
+          ...s.config,
+          neuronCounts: s.config.neuronCounts.slice(0, -1),
+        },
+        status: "idle",
+        selectedPoint: null,
+        activations: null,
+      };
+    }),
+  incNeuron: (layerIdx) =>
+    set((s) => {
+      const next = [...s.config.neuronCounts];
+      if (next[layerIdx] >= 12) return s;
+      next[layerIdx] += 1;
+      return {
+        config: { ...s.config, neuronCounts: next },
+        status: "idle",
+        selectedPoint: null,
+        activations: null,
+      };
+    }),
+  decNeuron: (layerIdx) =>
+    set((s) => {
+      const next = [...s.config.neuronCounts];
+      if (next[layerIdx] <= 1) return s;
+      next[layerIdx] -= 1;
+      return {
+        config: { ...s.config, neuronCounts: next },
+        status: "idle",
+        selectedPoint: null,
+        activations: null,
+      };
+    }),
   setActivation: (a) =>
     set((s) => ({ config: { ...s.config, activation: a }, status: "idle" })),
   setLearningRate: (lr) =>
