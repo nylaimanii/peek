@@ -3,6 +3,7 @@
 import { usePlayground } from "@/store/playground";
 import type { DatasetName } from "@/lib/network/datasets";
 import type { ActivationName } from "@/lib/network/model";
+import { FEATURES } from "@/lib/network/features";
 
 const DATASETS: { id: DatasetName; label: string }[] = [
   { id: "circles", label: "circles" },
@@ -29,6 +30,8 @@ export function Controls({ onTrain }: { onTrain: () => void }) {
     epochs,
     setEpochs,
     status,
+    activeFeatures,
+    toggleFeature,
   } = usePlayground();
 
   const training = status === "training";
@@ -61,6 +64,36 @@ export function Controls({ onTrain }: { onTrain: () => void }) {
             spiral is hard — needs lots of neurons/layers + ~1000 epochs.
           </p>
         )}
+      </div>
+
+      {/* feature inputs */}
+      <div>
+        <h2 className="font-mono text-xs uppercase tracking-wider text-ink-500">
+          input features
+        </h2>
+        <p className="mt-1 text-xs text-ink-300">
+          x₁, x₂ always on. add engineered features to help the net.
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          {FEATURES.map((f) => {
+            const on = activeFeatures.includes(f.key);
+            return (
+              <button
+                key={f.key}
+                onClick={() => toggleFeature(f.key)}
+                disabled={training || f.alwaysOn}
+                className={`rounded-lg border px-3 py-2 text-xs transition disabled:opacity-100 ${
+                  on
+                    ? "border-cream-300 bg-cream-100 text-ink-900"
+                    : "border-ink-300/20 bg-white/60 text-ink-400 hover:border-cream-200"
+                } ${f.alwaysOn ? "cursor-default opacity-70" : ""}`}
+                title={f.alwaysOn ? "always on" : on ? "click to remove" : "click to add"}
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* noise */}

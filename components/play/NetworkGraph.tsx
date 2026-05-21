@@ -14,6 +14,7 @@ import "reactflow/dist/style.css";
 import { usePlayground } from "@/store/playground";
 import { NeuronNode } from "./NeuronNode";
 import { buildNodes, buildEdges } from "@/lib/network/graph";
+import { activeFeatureLabels } from "@/lib/network/features";
 
 // both pinned at module scope. react flow v11 checks BOTH nodeTypes and
 // edgeTypes; leaving edgeTypes as the default object is what trips #002
@@ -24,6 +25,7 @@ const edgeTypes: EdgeTypes = {};
 function GraphInner() {
   const config = usePlayground((s) => s.config);
   const activations = usePlayground((s) => s.activations);
+  const activeFeatures = usePlayground((s) => s.activeFeatures);
   const { fitView } = useReactFlow();
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -34,11 +36,12 @@ function GraphInner() {
   // a useMemo array straight to <ReactFlow>) keeps react flow's internal
   // store in sync so fitView measures the NEW geometry.
   useEffect(() => {
-    const nextNodes = buildNodes(config, activations);
-    const nextEdges = buildEdges(config);
+    const inputLabels = activeFeatureLabels(activeFeatures);
+    const nextNodes = buildNodes(config, inputLabels, activations);
+    const nextEdges = buildEdges(config, inputLabels.length);
     setNodes(nextNodes);
     setEdges(nextEdges);
-  }, [config, activations, setNodes, setEdges]);
+  }, [config, activations, activeFeatures, setNodes, setEdges]);
 
   // fit AFTER nodes are committed to the store. keying on nodes.length +
   // the config dims ensures this runs once the new nodes actually exist.

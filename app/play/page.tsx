@@ -8,10 +8,11 @@ import { DataScatter } from "@/components/play/DataScatter";
 import { LossCurve } from "@/components/play/LossCurve";
 import { NetworkGraph } from "@/components/play/NetworkGraph";
 import { usePlayground } from "@/store/playground";
-import { generateDataset, datasetToTensors } from "@/lib/network/datasets";
+import { generateDataset } from "@/lib/network/datasets";
 import { buildModel } from "@/lib/network/model";
 import { trainModel } from "@/lib/network/train";
 import { buildActivationReaders, readActivations } from "@/lib/network/activations";
+import { featureVector, dataToFeatureTensors } from "@/lib/network/features";
 
 export default function PlayPage() {
   const {
@@ -37,6 +38,7 @@ export default function PlayPage() {
     setTrainedModel,
     setSelectedPoint,
     setActivations,
+    activeFeatures,
   } = usePlayground();
 
   const trainingRef = useRef(false);
@@ -60,8 +62,8 @@ export default function PlayPage() {
 
     startTraining();
 
-    const { xs, ys } = datasetToTensors(data);
-    const model = buildModel(config);
+    const { xs, ys } = dataToFeatureTensors(data, activeFeatures);
+    const model = buildModel(config, activeFeatures.length);
 
     await trainModel(model, xs, ys, epochs, 32, (s) => {
       pushTrainingStep(s.epoch, s.loss, s.accuracy);
@@ -145,7 +147,8 @@ export default function PlayPage() {
                   onSelect={(p) => {
                     setSelectedPoint(p);
                     if (activationReaders) {
-                      const acts = readActivations(activationReaders, p.x, p.y);
+                      const fv = featureVector(p.x, p.y, activeFeatures);
+                      const acts = readActivations(activationReaders, fv);
                       setActivations(acts);
                     }
                   }}

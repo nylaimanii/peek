@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { DatasetName, DataPoint } from "@/lib/network/datasets";
 import type { NetworkConfig, ActivationName } from "@/lib/network/model";
+import { DEFAULT_FEATURES } from "@/lib/network/features";
 
 export type TrainingStatus = "idle" | "training" | "done";
 
@@ -28,6 +29,10 @@ interface PlaygroundState {
   activationReaders: import("@tensorflow/tfjs").LayersModel[] | null;
   selectedPoint: { x: number; y: number } | null;
   activations: number[][] | null; // [layer][neuron]
+
+  // feature engineering
+  activeFeatures: import("@/lib/network/features").FeatureKey[];
+  toggleFeature: (key: import("@/lib/network/features").FeatureKey) => void;
 
   // actions
   setDataset: (d: DatasetName) => void;
@@ -78,6 +83,8 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   activationReaders: null,
   selectedPoint: null,
   activations: null,
+
+  activeFeatures: DEFAULT_FEATURES,
 
   setDataset: (d) => set({ dataset: d, status: "idle" }),
   setNoise: (n) => set({ noise: n }),
@@ -139,6 +146,21 @@ export const usePlayground = create<PlaygroundState>((set) => ({
     set({ trainedModel: model, activationReaders: readers }),
   setSelectedPoint: (p) => set({ selectedPoint: p }),
   setActivations: (a) => set({ activations: a }),
+
+  toggleFeature: (key) =>
+    set((s) => {
+      if (key === "x" || key === "y") return s; // always on
+      const has = s.activeFeatures.includes(key);
+      const next = has
+        ? s.activeFeatures.filter((k) => k !== key)
+        : [...s.activeFeatures, key];
+      return {
+        activeFeatures: next,
+        status: "idle",
+        selectedPoint: null,
+        activations: null,
+      };
+    }),
 
   startTraining: () =>
     set({

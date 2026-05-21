@@ -10,9 +10,8 @@ const NODE_SIZE = 44;
  * builds the layer structure: [inputCount, ...hiddenCounts, outputCount]
  * input is always 2 (x, y), output is always 1 (binary prob).
  */
-export function layerSizes(config: NetworkConfig): number[] {
-  // input is 2 (x,y) for now; output is 1. hidden = neuronCounts.
-  return [2, ...config.neuronCounts, 1];
+export function layerSizes(config: NetworkConfig, inputCount: number = 2): number[] {
+  return [inputCount, ...config.neuronCounts, 1];
 }
 
 /**
@@ -21,9 +20,10 @@ export function layerSizes(config: NetworkConfig): number[] {
  */
 export function buildNodes(
   config: NetworkConfig,
+  inputLabels: string[],
   activations?: number[][] | null
 ): Node<NeuronData>[] {
-  const sizes = layerSizes(config);
+  const sizes = layerSizes(config, inputLabels.length);
   const maxCount = Math.max(...sizes);
   const totalHeight = maxCount * ROW_GAP;
   const nodes: Node<NeuronData>[] = [];
@@ -43,7 +43,7 @@ export function buildNodes(
     for (let i = 0; i < count; i++) {
       const id = `${layerIdx}-${i}`;
       let label = "";
-      if (kind === "input") label = i === 0 ? "x" : "y";
+      if (kind === "input") label = inputLabels[i] ?? "";
       if (kind === "output") label = "ŷ";
 
       let activation: number | undefined = undefined;
@@ -76,8 +76,8 @@ export function buildNodes(
 /**
  * fully connects each layer to the next (dense). returns react flow edges.
  */
-export function buildEdges(config: NetworkConfig): Edge[] {
-  const sizes = layerSizes(config);
+export function buildEdges(config: NetworkConfig, inputCount: number): Edge[] {
+  const sizes = layerSizes(config, inputCount);
   const edges: Edge[] = [];
 
   for (let layerIdx = 0; layerIdx < sizes.length - 1; layerIdx++) {

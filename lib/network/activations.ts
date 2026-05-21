@@ -32,20 +32,18 @@ export function buildActivationReaders(
 }
 
 /**
- * runs the input [x, y] through each reader and returns the activation
+ * runs a feature vector through each reader and returns the activation
  * of every neuron in every dense layer.
  */
 export function readActivations(
   readers: tf.LayersModel[],
-  x: number,
-  y: number
+  featureVec: number[]
 ): LayerActivations {
   return tf.tidy(() => {
-    const input = tf.tensor2d([[x, y]]);
+    const input = tf.tensor2d([featureVec]);
     const result: LayerActivations = readers.map((reader) => {
       const out = reader.predict(input) as tf.Tensor;
-      const vals = Array.from(out.dataSync());
-      return vals;
+      return Array.from(out.dataSync());
     });
     return result;
   });
