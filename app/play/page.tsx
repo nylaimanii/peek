@@ -131,8 +131,11 @@ export default function PlayPage() {
     setTrainedModel(model, readers);
 
     // compute the decision-boundary grid for the heatmap behind the scatter
-    const grid = predictGrid(model, activeFeatures, usePlayground.getState().gridRes);
-    setPredictionGrid(grid);
+    // (skip for mnist — 2D grid samplers don't match the 784-dim input model)
+    if (dataset !== "mnist") {
+      const grid = predictGrid(model, activeFeatures, usePlayground.getState().gridRes);
+      setPredictionGrid(grid);
+    }
     setWeights(extractWeights(model));
 
     xs.dispose();

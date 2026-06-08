@@ -16,6 +16,7 @@ import { NeuronNode } from "./NeuronNode";
 import { buildNodes, buildEdges } from "@/lib/network/graph";
 import { activeFeatureLabels } from "@/lib/network/features";
 import { neuronActivationGrid } from "@/lib/network/activations";
+import { MNIST_INPUT_SIZE } from "@/lib/network/mnist";
 
 // both pinned at module scope. react flow v11 checks BOTH nodeTypes and
 // edgeTypes; leaving edgeTypes as the default object is what trips #002
@@ -30,12 +31,14 @@ function GraphInner() {
   const weights = usePlayground((s) => s.weights);
   const activationReaders = usePlayground((s) => s.activationReaders);
   const setHoveredNeuron = usePlayground((s) => s.setHoveredNeuron);
+  const dataset = usePlayground((s) => s.dataset);
   const { fitView } = useReactFlow();
 
   const onNodeMouseEnter = (
     _e: React.MouseEvent,
     node: { data: { layerIdx?: number; neuronIdx?: number; label?: string; kind?: string } }
   ) => {
+    if (dataset === "mnist") return; // 2D grid sampler doesn't fit 784-dim input
     const { layerIdx, neuronIdx } = node.data;
     if (layerIdx === undefined || neuronIdx === undefined) return;
     if (!activationReaders) return;
@@ -66,12 +69,15 @@ function GraphInner() {
   // a useMemo array straight to <ReactFlow>) keeps react flow's internal
   // store in sync so fitView measures the NEW geometry.
   useEffect(() => {
-    const inputLabels = activeFeatureLabels(activeFeatures);
+    const inputLabels =
+      dataset === "mnist"
+        ? Array<string>(MNIST_INPUT_SIZE).fill("")
+        : activeFeatureLabels(activeFeatures);
     const nextNodes = buildNodes(config, inputLabels, activations);
     const nextEdges = buildEdges(config, inputLabels.length, weights);
     setNodes(nextNodes);
     setEdges(nextEdges);
-  }, [config, activations, activeFeatures, weights, setNodes, setEdges]);
+  }, [config, activations, activeFeatures, weights, dataset, setNodes, setEdges]);
 
   // fit AFTER nodes are committed to the store. keying on nodes.length +
   // the config dims ensures this runs once the new nodes actually exist.
