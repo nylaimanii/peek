@@ -68,6 +68,12 @@ interface PlaygroundState {
   weights: number[][][] | null;
   setWeights: (w: number[][][] | null) => void;
 
+  // mnist support
+  mnistExamples: import("@/lib/network/mnist").MnistExample[] | null;
+  setMnistExamples: (e: import("@/lib/network/mnist").MnistExample[] | null) => void;
+  selectedMnistIdx: number | null;
+  setSelectedMnistIdx: (i: number | null) => void;
+
   // hovered neuron (for per-neuron decision boundary inspector)
   hoveredNeuron: {
     layerIdx: number;
@@ -136,6 +142,8 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   gridRes: 50,
   weights: null,
   hoveredNeuron: null,
+  mnistExamples: null,
+  selectedMnistIdx: null,
 
   setDataset: (d) =>
     set((s) => {
@@ -150,6 +158,8 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         predictionGrid: null,
         weights: null,
         hoveredNeuron: null,
+        mnistExamples: null,
+        selectedMnistIdx: null,
       };
     }),
   setNoise: (n) => set({ noise: n }),
@@ -167,6 +177,8 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         predictionGrid: null,
         weights: null,
         hoveredNeuron: null,
+        mnistExamples: null,
+        selectedMnistIdx: null,
       };
     }),
   removeLayer: () =>
@@ -183,6 +195,8 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         predictionGrid: null,
         weights: null,
         hoveredNeuron: null,
+        mnistExamples: null,
+        selectedMnistIdx: null,
       };
     }),
   incNeuron: (layerIdx) =>
@@ -201,6 +215,8 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         predictionGrid: null,
         weights: null,
         hoveredNeuron: null,
+        mnistExamples: null,
+        selectedMnistIdx: null,
       };
     }),
   decNeuron: (layerIdx) =>
@@ -219,6 +235,8 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         predictionGrid: null,
         weights: null,
         hoveredNeuron: null,
+        mnistExamples: null,
+        selectedMnistIdx: null,
       };
     }),
   setActivation: (a) =>
@@ -234,6 +252,8 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         predictionGrid: null,
         weights: null,
         hoveredNeuron: null,
+        mnistExamples: null,
+        selectedMnistIdx: null,
       };
     }),
   setLearningRate: (lr) =>
@@ -248,6 +268,8 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   setPredictionGrid: (grid) => set({ predictionGrid: grid }),
   setWeights: (w) => set({ weights: w }),
   setHoveredNeuron: (n) => set({ hoveredNeuron: n }),
+  setMnistExamples: (e) => set({ mnistExamples: e }),
+  setSelectedMnistIdx: (i) => set({ selectedMnistIdx: i }),
 
   toggleFeature: (key) =>
     set((s) => {
@@ -267,6 +289,8 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         predictionGrid: null,
         weights: null,
         hoveredNeuron: null,
+        mnistExamples: null,
+        selectedMnistIdx: null,
       };
     }),
 

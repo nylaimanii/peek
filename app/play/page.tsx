@@ -9,6 +9,12 @@ import { LossCurve } from "@/components/play/LossCurve";
 import { NetworkGraph } from "@/components/play/NetworkGraph";
 import { BoundaryCanvas } from "@/components/play/BoundaryCanvas";
 import { NeuronInspector } from "@/components/play/NeuronInspector";
+import { MnistGallery } from "@/components/play/MnistGallery";
+import {
+  generateMnistDataset,
+  mnistToTensors,
+  MNIST_INPUT_SIZE,
+} from "@/lib/network/mnist";
 import { usePlayground } from "@/store/playground";
 import { generateDataset } from "@/lib/network/datasets";
 import { buildModel } from "@/lib/network/model";
@@ -48,6 +54,8 @@ export default function PlayPage() {
     setPredictionGrid,
     weights,
     setWeights,
+    mnistExamples,
+    setMnistExamples,
   } = usePlayground();
 
   const trainingRef = useRef(false);
@@ -56,6 +64,13 @@ export default function PlayPage() {
   useEffect(() => {
     setData(generateDataset(dataset, nPoints, noise));
   }, [dataset, noise, nPoints, setData]);
+
+  // lazily generate mnist examples when the user picks it
+  useEffect(() => {
+    if (dataset === "mnist" && !mnistExamples) {
+      setMnistExamples(generateMnistDataset(1000));
+    }
+  }, [dataset, mnistExamples, setMnistExamples]);
 
   async function handleTrain() {
     if (trainingRef.current) return;
@@ -85,8 +100,25 @@ export default function PlayPage() {
 
     startTraining();
 
-    const { xs, ys } = dataToFeatureTensors(data, activeFeatures);
-    const model = buildModel(config, activeFeatures.length);
+    let xs: import("@tensorflow/tfjs").Tensor2D;
+    let ys: import("@tensorflow/tfjs").Tensor2D;
+    let inputDim: number;
+    if (dataset === "mnist") {
+      if (!mnistExamples) {
+        trainingRef.current = false;
+        return;
+      }
+      const t = mnistToTensors(mnistExamples);
+      xs = t.xs;
+      ys = t.ys;
+      inputDim = MNIST_INPUT_SIZE;
+    } else {
+      const t = dataToFeatureTensors(data, activeFeatures);
+      xs = t.xs;
+      ys = t.ys;
+      inputDim = activeFeatures.length;
+    }
+    const model = buildModel(config, inputDim);
 
     await trainModel(model, xs, ys, epochs, 32, (s) => {
       pushTrainingStep(s.epoch, s.loss, s.accuracy);
@@ -175,39 +207,50 @@ export default function PlayPage() {
           <aside className="flex flex-col gap-5 rounded-2xl border border-ink-300/20 bg-white/60 p-5 backdrop-blur">
             <div>
               <h2 className="font-mono text-xs uppercase tracking-wider text-ink-500">
-                data
+                {dataset === "mnist" ? "input" : "data"}
               </h2>
-              <div className="relative mx-auto mt-3" style={{ width: 220, height: 220 }}>
-                <BoundaryCanvas
-                  grid={predictionGrid}
-                  res={gridRes}
-                  size={220}
-                />
-                <div className="absolute inset-0">
-                  <DataScatter
-                    data={data}
-                    size={220}
-                    selected={selectedPoint}
-                    onSelect={(p) => {
-                      setSelectedPoint(p);
-                      if (activationReaders) {
-                        const fv = featureVector(p.x, p.y, activeFeatures);
-                        const acts = readActivations(activationReaders, fv);
-                        setActivations(acts);
-                      }
-                    }}
-                  />
+              {dataset === "mnist" ? (
+                <div className="mt-3">
+                  <MnistGallery />
                 </div>
-              </div>
-              {trainedModel && !selectedPoint && (
-                <p className="mt-2 text-center text-xs text-ink-300">
-                  click a point to watch it flow through the network
-                </p>
-              )}
-              {selectedPoint && (
-                <p className="mt-2 text-center text-xs text-ink-500">
-                  showing activations for ({selectedPoint.x.toFixed(2)}, {selectedPoint.y.toFixed(2)})
-                </p>
+              ) : (
+                <>
+                  <div
+                    className="relative mx-auto mt-3"
+                    style={{ width: 220, height: 220 }}
+                  >
+                    <BoundaryCanvas
+                      grid={predictionGrid}
+                      res={gridRes}
+                      size={220}
+                    />
+                    <div className="absolute inset-0">
+                      <DataScatter
+                        data={data}
+                        size={220}
+                        selected={selectedPoint}
+                        onSelect={(p) => {
+                          setSelectedPoint(p);
+                          if (activationReaders) {
+                            const fv = featureVector(p.x, p.y, activeFeatures);
+                            const acts = readActivations(activationReaders, fv);
+                            setActivations(acts);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                  {trainedModel && !selectedPoint && (
+                    <p className="mt-2 text-center text-xs text-ink-300">
+                      click a point to watch it flow through the network
+                    </p>
+                  )}
+                  {selectedPoint && (
+                    <p className="mt-2 text-center text-xs text-ink-500">
+                      showing activations for ({selectedPoint.x.toFixed(2)}, {selectedPoint.y.toFixed(2)})
+                    </p>
+                  )}
+                </>
               )}
             </div>
             <div>

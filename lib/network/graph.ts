@@ -36,14 +36,18 @@ export function buildNodes(
         ? "output"
         : "hidden";
 
-    // vertically center this column
-    const colHeight = count * ROW_GAP;
+    // collapse high-dim inputs (e.g. mnist 784) to a single placeholder
+    const isHighDimInput = layerIdx === 0 && count > 16;
+    const renderedCount = isHighDimInput ? 1 : count;
+    const colHeight = renderedCount * ROW_GAP;
     const yOffset = (totalHeight - colHeight) / 2;
 
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < renderedCount; i++) {
       const id = `${layerIdx}-${i}`;
       let label = "";
-      if (kind === "input") label = inputLabels[i] ?? "";
+      if (kind === "input") {
+        label = isHighDimInput ? `${count} inputs` : (inputLabels[i] ?? "");
+      }
       if (kind === "output") label = "ŷ";
 
       let activation: number | undefined = undefined;
@@ -94,6 +98,29 @@ export function buildEdges(
   for (let layerIdx = 0; layerIdx < sizes.length - 1; layerIdx++) {
     const fromCount = sizes[layerIdx];
     const toCount = sizes[layerIdx + 1];
+    // when the input layer is collapsed (>16), only ONE source node "0-0"
+    // exists in the graph — emit a single edge per first-hidden neuron from
+    // it, with default styling (per-pixel weight coloring is meaningless
+    // when 784 pixels are summarized into one node).
+    const isCollapsedInput = layerIdx === 0 && fromCount > 16;
+
+    if (isCollapsedInput) {
+      for (let j = 0; j < toCount; j++) {
+        edges.push({
+          id: `e${layerIdx}-collapsed-${j}`,
+          source: `${layerIdx}-0`,
+          target: `${layerIdx + 1}-${j}`,
+          type: "straight",
+          style: {
+            stroke: "var(--color-ink-300)",
+            strokeWidth: 0.75,
+            opacity: 0.4,
+          },
+        });
+      }
+      continue;
+    }
+
     for (let i = 0; i < fromCount; i++) {
       for (let j = 0; j < toCount; j++) {
         let stroke = "var(--color-ink-300)";

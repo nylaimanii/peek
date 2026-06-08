@@ -9,7 +9,8 @@ export type DatasetName =
   | "rings"
   | "checkerboard"
   | "stripes"
-  | "eye";
+  | "eye"
+  | "mnist";
 
 export interface DataPoint {
   x: number;
@@ -45,6 +46,10 @@ export function generateDataset(
       return generateStripes(nPoints, noise);
     case "eye":
       return generateEye(nPoints, noise);
+    case "mnist":
+      // mnist uses its own pipeline; this returns empty so 2D-shaped
+      // consumers don't break. real mnist data lives in mnist.ts.
+      return [];
   }
 }
 

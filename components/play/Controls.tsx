@@ -15,6 +15,7 @@ const DATASETS: { id: DatasetName; label: string }[] = [
   { id: "checkerboard", label: "checker" },
   { id: "stripes", label: "stripes" },
   { id: "eye", label: "eye" },
+  { id: "mnist", label: "mnist" },
 ];
 
 const ACTIVATIONS: ActivationName[] = ["tanh", "relu", "sigmoid"];
@@ -74,7 +75,8 @@ export function Controls({ onTrain }: { onTrain: () => void }) {
         )}
       </div>
 
-      {/* feature inputs */}
+      {/* feature inputs (hidden for mnist — raw pixels are the features) */}
+      {dataset !== "mnist" && (
       <div>
         <h2 className="font-mono text-xs uppercase tracking-wider text-ink-500">
           input features
@@ -103,6 +105,7 @@ export function Controls({ onTrain }: { onTrain: () => void }) {
           })}
         </div>
       </div>
+      )}
 
       {/* noise */}
       <div>
