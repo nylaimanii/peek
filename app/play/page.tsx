@@ -120,8 +120,24 @@ export default function PlayPage() {
     }
     const model = buildModel(config, inputDim);
 
+    const BOUNDARY_SAMPLE_EVERY = 5;
+
     await trainModel(model, xs, ys, epochs, 32, (s) => {
       pushTrainingStep(s.epoch, s.loss, s.accuracy);
+
+      // live boundary sampling — skip mnist (no 2D boundary)
+      if (dataset !== "mnist" && s.epoch % BOUNDARY_SAMPLE_EVERY === 0) {
+        try {
+          const liveGrid = predictGrid(
+            model,
+            activeFeatures,
+            usePlayground.getState().gridRes
+          );
+          setPredictionGrid(liveGrid);
+        } catch {
+          // mid-train predictGrid may throw transiently — skip silently
+        }
+      }
     });
 
     finishTraining();
