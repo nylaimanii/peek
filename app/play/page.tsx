@@ -22,6 +22,7 @@ import { trainModel } from "@/lib/network/train";
 import { buildActivationReaders, readActivations } from "@/lib/network/activations";
 import { featureVector, dataToFeatureTensors } from "@/lib/network/features";
 import { predictGrid } from "@/lib/network/predict";
+import { ablatedPredictGrid } from "@/lib/network/ablate";
 import { extractWeights } from "@/lib/network/graph";
 
 export default function PlayPage() {
@@ -56,6 +57,8 @@ export default function PlayPage() {
     setWeights,
     mnistExamples,
     setMnistExamples,
+    ablatedNeurons,
+    clearAblations,
   } = usePlayground();
 
   const trainingRef = useRef(false);
@@ -71,6 +74,34 @@ export default function PlayPage() {
       setMnistExamples(generateMnistDataset(1000));
     }
   }, [dataset, mnistExamples, setMnistExamples]);
+
+  // re-render the boundary heatmap whenever ablations change. when the set
+  // is empty we run the regular predictGrid (restore clean boundary); when
+  // it's non-empty we run ablatedPredictGrid (zero out the selected neurons
+  // in the manual forward pass).
+  useEffect(() => {
+    if (!trainedModel || dataset === "mnist") return;
+    if (ablatedNeurons.size === 0) {
+      try {
+        const clean = predictGrid(trainedModel, activeFeatures, gridRes);
+        setPredictionGrid(clean);
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+    try {
+      const ablatedGrid = ablatedPredictGrid(
+        trainedModel,
+        activeFeatures,
+        ablatedNeurons,
+        gridRes
+      );
+      setPredictionGrid(ablatedGrid);
+    } catch (e) {
+      console.warn("ablation grid failed:", e);
+    }
+  }, [ablatedNeurons, trainedModel, activeFeatures, dataset, gridRes, setPredictionGrid]);
 
   async function handleTrain() {
     if (trainingRef.current) return;
@@ -215,6 +246,15 @@ export default function PlayPage() {
                     <span className="inline-block h-0.5 w-3 bg-pink-300" />−
                   </span>
                 </span>
+              )}
+              {ablatedNeurons.size > 0 && (
+                <button
+                  onClick={clearAblations}
+                  className="ml-3 rounded-md border border-ink-300/30 bg-white/70 px-2 py-0.5 font-mono text-[10px] text-ink-700 transition hover:border-pink-300"
+                  title="restore all ablated neurons"
+                >
+                  un-ablate ({ablatedNeurons.size})
+                </button>
               )}
             </div>
             <div className="relative flex-1">

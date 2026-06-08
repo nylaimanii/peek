@@ -21,7 +21,8 @@ export function layerSizes(config: NetworkConfig, inputCount: number = 2): numbe
 export function buildNodes(
   config: NetworkConfig,
   inputLabels: string[],
-  activations?: number[][] | null
+  activations?: number[][] | null,
+  ablated?: Set<string> | null
 ): Node<NeuronData>[] {
   const sizes = layerSizes(config, inputLabels.length);
   const maxCount = Math.max(...sizes);
@@ -72,6 +73,9 @@ export function buildNodes(
           activation,
           ...(kind !== "input"
             ? { layerIdx: layerIdx - 1, neuronIdx: i }
+            : {}),
+          ...(ablated && kind !== "input" && ablated.has(`${layerIdx - 1}-${i}`)
+            ? { ablated: true }
             : {}),
         },
         draggable: false,

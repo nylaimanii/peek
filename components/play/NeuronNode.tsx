@@ -8,6 +8,8 @@ export type NeuronData = {
   layerIdx?: number;
   /** index within the layer */
   neuronIdx?: number;
+  /** ablated: visually dimmed + dashed, contribution zeroed out at forward pass */
+  ablated?: boolean;
 };
 
 /**
@@ -60,10 +62,15 @@ export function NeuronNode({ data }: { data: NeuronData }) {
         width: 44,
         height: 44,
         background: bg,
-        border: `1.5px solid ${border}`,
+        border: `1.5px ${data.ablated ? "dashed" : "solid"} ${data.ablated ? "var(--color-ink-700)" : border}`,
+        opacity: data.ablated ? 0.4 : 1,
       }}
       title={
-        hasActivation ? `activation: ${(data.activation as number).toFixed(3)}` : undefined
+        data.ablated
+          ? "ablated — click to restore"
+          : hasActivation
+          ? `activation: ${(data.activation as number).toFixed(3)} — click to ablate`
+          : "click to ablate"
       }
     >
       {data.label ?? ""}

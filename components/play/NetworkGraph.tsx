@@ -32,7 +32,22 @@ function GraphInner() {
   const activationReaders = usePlayground((s) => s.activationReaders);
   const setHoveredNeuron = usePlayground((s) => s.setHoveredNeuron);
   const dataset = usePlayground((s) => s.dataset);
+  const ablatedNeurons = usePlayground((s) => s.ablatedNeurons);
+  const toggleAblateNeuron = usePlayground((s) => s.toggleAblateNeuron);
+  const trainedModel = usePlayground((s) => s.trainedModel);
   const { fitView } = useReactFlow();
+
+  const onNodeClick = (
+    _e: React.MouseEvent,
+    node: { data: { layerIdx?: number; neuronIdx?: number; kind?: string } }
+  ) => {
+    if (!trainedModel) return; // can't ablate before training
+    if (dataset === "mnist") return; // no 2D boundary to mutate anyway
+    const { layerIdx, neuronIdx, kind } = node.data;
+    if (layerIdx === undefined || neuronIdx === undefined) return;
+    if (kind === "input") return; // inputs not ablatable
+    toggleAblateNeuron(`${layerIdx}-${neuronIdx}`);
+  };
 
   const onNodeMouseEnter = (
     _e: React.MouseEvent,
@@ -73,11 +88,11 @@ function GraphInner() {
       dataset === "mnist"
         ? Array<string>(MNIST_INPUT_SIZE).fill("")
         : activeFeatureLabels(activeFeatures);
-    const nextNodes = buildNodes(config, inputLabels, activations);
+    const nextNodes = buildNodes(config, inputLabels, activations, ablatedNeurons);
     const nextEdges = buildEdges(config, inputLabels.length, weights);
     setNodes(nextNodes);
     setEdges(nextEdges);
-  }, [config, activations, activeFeatures, weights, dataset, setNodes, setEdges]);
+  }, [config, activations, activeFeatures, weights, dataset, ablatedNeurons, setNodes, setEdges]);
 
   // fit AFTER nodes are committed to the store. keying on nodes.length +
   // the config dims ensures this runs once the new nodes actually exist.
@@ -106,6 +121,7 @@ function GraphInner() {
       onEdgesChange={onEdgesChange}
       onNodeMouseEnter={onNodeMouseEnter}
       onNodeMouseLeave={onNodeMouseLeave}
+      onNodeClick={onNodeClick}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
       fitView

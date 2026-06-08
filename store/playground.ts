@@ -68,6 +68,11 @@ interface PlaygroundState {
   weights: number[][][] | null;
   setWeights: (w: number[][][] | null) => void;
 
+  // circuit ablation
+  ablatedNeurons: Set<string>;
+  toggleAblateNeuron: (key: string) => void;
+  clearAblations: () => void;
+
   // mnist support
   mnistExamples: import("@/lib/network/mnist").MnistExample[] | null;
   setMnistExamples: (e: import("@/lib/network/mnist").MnistExample[] | null) => void;
@@ -144,6 +149,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   hoveredNeuron: null,
   mnistExamples: null,
   selectedMnistIdx: null,
+  ablatedNeurons: new Set<string>(),
 
   setDataset: (d) =>
     set((s) => {
@@ -160,6 +166,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         hoveredNeuron: null,
         mnistExamples: null,
         selectedMnistIdx: null,
+        ablatedNeurons: new Set<string>(),
       };
     }),
   setNoise: (n) => set({ noise: n }),
@@ -179,6 +186,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         hoveredNeuron: null,
         mnistExamples: null,
         selectedMnistIdx: null,
+        ablatedNeurons: new Set<string>(),
       };
     }),
   removeLayer: () =>
@@ -197,6 +205,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         hoveredNeuron: null,
         mnistExamples: null,
         selectedMnistIdx: null,
+        ablatedNeurons: new Set<string>(),
       };
     }),
   incNeuron: (layerIdx) =>
@@ -217,6 +226,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         hoveredNeuron: null,
         mnistExamples: null,
         selectedMnistIdx: null,
+        ablatedNeurons: new Set<string>(),
       };
     }),
   decNeuron: (layerIdx) =>
@@ -237,6 +247,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         hoveredNeuron: null,
         mnistExamples: null,
         selectedMnistIdx: null,
+        ablatedNeurons: new Set<string>(),
       };
     }),
   setActivation: (a) =>
@@ -254,6 +265,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         hoveredNeuron: null,
         mnistExamples: null,
         selectedMnistIdx: null,
+        ablatedNeurons: new Set<string>(),
       };
     }),
   setLearningRate: (lr) =>
@@ -270,6 +282,14 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   setHoveredNeuron: (n) => set({ hoveredNeuron: n }),
   setMnistExamples: (e) => set({ mnistExamples: e }),
   setSelectedMnistIdx: (i) => set({ selectedMnistIdx: i }),
+  toggleAblateNeuron: (key) =>
+    set((s) => {
+      const next = new Set(s.ablatedNeurons);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return { ablatedNeurons: next };
+    }),
+  clearAblations: () => set({ ablatedNeurons: new Set<string>() }),
 
   toggleFeature: (key) =>
     set((s) => {
@@ -291,6 +311,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         hoveredNeuron: null,
         mnistExamples: null,
         selectedMnistIdx: null,
+        ablatedNeurons: new Set<string>(),
       };
     }),
 
@@ -307,6 +328,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       predictionGrid: null,
       weights: null,
       hoveredNeuron: null,
+      ablatedNeurons: new Set<string>(),
     }),
   pushTrainingStep: (epoch, loss, acc) =>
     set((s) => ({
@@ -330,5 +352,6 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       predictionGrid: null,
       weights: null,
       hoveredNeuron: null,
+      ablatedNeurons: new Set<string>(),
     }),
 }));
