@@ -10,6 +10,7 @@ import { NetworkGraph } from "@/components/play/NetworkGraph";
 import { BoundaryCanvas } from "@/components/play/BoundaryCanvas";
 import { NeuronInspector } from "@/components/play/NeuronInspector";
 import { MnistGallery } from "@/components/play/MnistGallery";
+import { SaeGallery } from "@/components/play/SaeGallery";
 import {
   generateMnistDataset,
   mnistToTensors,
@@ -361,6 +362,7 @@ export default function PlayPage() {
             </div>
 
             <NeuronInspector />
+            <SaeGallery />
           </aside>
         </div>
       </section>

@@ -11,6 +11,7 @@ export type TrainingStatus = "idle" | "training" | "done";
 function disposeLiveModel(s: {
   trainedModel: import("@tensorflow/tfjs").LayersModel | null;
   activationReaders: import("@tensorflow/tfjs").LayersModel[] | null;
+  saeModel?: import("@/lib/network/sae").SaeModel | null;
 }) {
   try {
     s.trainedModel?.dispose();
@@ -27,6 +28,11 @@ function disposeLiveModel(s: {
     });
   } catch {
     /* ignore */
+  }
+  try {
+    s.saeModel?.dispose();
+  } catch {
+    /* already disposed */
   }
 }
 
@@ -72,6 +78,17 @@ interface PlaygroundState {
   ablatedNeurons: Set<string>;
   toggleAblateNeuron: (key: string) => void;
   clearAblations: () => void;
+
+  // sparse autoencoder (mnist-only)
+  saeModel: import("@/lib/network/sae").SaeModel | null;
+  saeStatus: "idle" | "training" | "done";
+  saeFeatures: import("@/lib/network/sae").SaeFeature[] | null;
+  saeTrainingLoss: number[];
+  setSaeModel: (m: import("@/lib/network/sae").SaeModel | null) => void;
+  setSaeStatus: (s: "idle" | "training" | "done") => void;
+  setSaeFeatures: (f: import("@/lib/network/sae").SaeFeature[] | null) => void;
+  pushSaeLoss: (loss: number) => void;
+  resetSae: () => void;
 
   // mnist support
   mnistExamples: import("@/lib/network/mnist").MnistExample[] | null;
@@ -150,6 +167,10 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   mnistExamples: null,
   selectedMnistIdx: null,
   ablatedNeurons: new Set<string>(),
+  saeModel: null,
+  saeStatus: "idle",
+  saeFeatures: null,
+  saeTrainingLoss: [],
 
   setDataset: (d) =>
     set((s) => {
@@ -179,6 +200,10 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         ablatedNeurons: new Set<string>(),
         mnistExamples: null,
         selectedMnistIdx: null,
+        saeModel: null,
+        saeStatus: "idle" as const,
+        saeFeatures: null,
+        saeTrainingLoss: [],
       };
     }),
   setNoise: (n) => set({ noise: n }),
@@ -199,6 +224,10 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         mnistExamples: null,
         selectedMnistIdx: null,
         ablatedNeurons: new Set<string>(),
+        saeModel: null,
+        saeStatus: "idle" as const,
+        saeFeatures: null,
+        saeTrainingLoss: [],
       };
     }),
   removeLayer: () =>
@@ -218,6 +247,10 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         mnistExamples: null,
         selectedMnistIdx: null,
         ablatedNeurons: new Set<string>(),
+        saeModel: null,
+        saeStatus: "idle" as const,
+        saeFeatures: null,
+        saeTrainingLoss: [],
       };
     }),
   incNeuron: (layerIdx) =>
@@ -239,6 +272,10 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         mnistExamples: null,
         selectedMnistIdx: null,
         ablatedNeurons: new Set<string>(),
+        saeModel: null,
+        saeStatus: "idle" as const,
+        saeFeatures: null,
+        saeTrainingLoss: [],
       };
     }),
   decNeuron: (layerIdx) =>
@@ -260,6 +297,10 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         mnistExamples: null,
         selectedMnistIdx: null,
         ablatedNeurons: new Set<string>(),
+        saeModel: null,
+        saeStatus: "idle" as const,
+        saeFeatures: null,
+        saeTrainingLoss: [],
       };
     }),
   setActivation: (a) =>
@@ -278,6 +319,10 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         mnistExamples: null,
         selectedMnistIdx: null,
         ablatedNeurons: new Set<string>(),
+        saeModel: null,
+        saeStatus: "idle" as const,
+        saeFeatures: null,
+        saeTrainingLoss: [],
       };
     }),
   setLearningRate: (lr) =>
@@ -302,6 +347,25 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       return { ablatedNeurons: next };
     }),
   clearAblations: () => set({ ablatedNeurons: new Set<string>() }),
+  setSaeModel: (m) => set({ saeModel: m }),
+  setSaeStatus: (st) => set({ saeStatus: st }),
+  setSaeFeatures: (f) => set({ saeFeatures: f }),
+  pushSaeLoss: (loss) =>
+    set((s) => ({ saeTrainingLoss: [...s.saeTrainingLoss, loss] })),
+  resetSae: () =>
+    set((s) => {
+      try {
+        s.saeModel?.dispose();
+      } catch {
+        /* already disposed */
+      }
+      return {
+        saeModel: null,
+        saeStatus: "idle",
+        saeFeatures: null,
+        saeTrainingLoss: [],
+      };
+    }),
 
   toggleFeature: (key) =>
     set((s) => {
@@ -324,6 +388,10 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         mnistExamples: null,
         selectedMnistIdx: null,
         ablatedNeurons: new Set<string>(),
+        saeModel: null,
+        saeStatus: "idle" as const,
+        saeFeatures: null,
+        saeTrainingLoss: [],
       };
     }),
 
@@ -341,6 +409,10 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       weights: null,
       hoveredNeuron: null,
       ablatedNeurons: new Set<string>(),
+      saeModel: null,
+      saeStatus: "idle" as const,
+      saeFeatures: null,
+      saeTrainingLoss: [],
     }),
   pushTrainingStep: (epoch, loss, acc) =>
     set((s) => ({
@@ -365,5 +437,9 @@ export const usePlayground = create<PlaygroundState>((set) => ({
       weights: null,
       hoveredNeuron: null,
       ablatedNeurons: new Set<string>(),
+      saeModel: null,
+      saeStatus: "idle" as const,
+      saeFeatures: null,
+      saeTrainingLoss: [],
     }),
 }));
