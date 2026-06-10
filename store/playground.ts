@@ -154,8 +154,20 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   setDataset: (d) =>
     set((s) => {
       disposeLiveModel(s);
+      const isMnist = d === "mnist";
+      const wasMnist = s.dataset === "mnist";
+      let nextConfig = s.config;
+      if (isMnist && !wasMnist) {
+        // entering mnist: switch to a wider network for richer features
+        // (downstream SAE needs polysemantic neurons to decompose)
+        nextConfig = { ...s.config, neuronCounts: [32, 16] };
+      } else if (!isMnist && wasMnist) {
+        // leaving mnist: restore a 2D-friendly default
+        nextConfig = { ...s.config, neuronCounts: [6, 6] };
+      }
       return {
         dataset: d,
+        config: nextConfig,
         status: "idle",
         selectedPoint: null,
         activations: null,
@@ -164,9 +176,9 @@ export const usePlayground = create<PlaygroundState>((set) => ({
         predictionGrid: null,
         weights: null,
         hoveredNeuron: null,
+        ablatedNeurons: new Set<string>(),
         mnistExamples: null,
         selectedMnistIdx: null,
-        ablatedNeurons: new Set<string>(),
       };
     }),
   setNoise: (n) => set({ noise: n }),
@@ -211,7 +223,7 @@ export const usePlayground = create<PlaygroundState>((set) => ({
   incNeuron: (layerIdx) =>
     set((s) => {
       const next = [...s.config.neuronCounts];
-      if (next[layerIdx] >= 12) return s;
+      if (next[layerIdx] >= 64) return s;
       next[layerIdx] += 1;
       disposeLiveModel(s);
       return {

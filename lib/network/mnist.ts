@@ -25,45 +25,89 @@ function generateSyntheticDigit(label: 0 | 1, seed: number): Float32Array {
   const pixels = new Float32Array(MNIST_INPUT_SIZE);
   const rand = mulberry32(seed);
 
-  if (label === 0) {
-    // "digit A" — horizontal strokes + sparse fill
-    const numStrokes = 2 + Math.floor(rand() * 2);
-    for (let s = 0; s < numStrokes; s++) {
-      const y = 6 + Math.floor(rand() * 16);
-      const x0 = 4 + Math.floor(rand() * 6);
-      const x1 = 18 + Math.floor(rand() * 6);
-      const thickness = 1 + Math.floor(rand() * 2);
-      for (let x = x0; x < x1; x++) {
-        for (let dy = 0; dy < thickness; dy++) {
-          const py = y + dy;
-          if (py < MNIST_DIM) {
-            pixels[py * MNIST_DIM + x] = 0.8 + rand() * 0.2;
-          }
+  // helper: draw a stroke along a parametric path with soft thickness
+  const drawStroke = (
+    pathFn: (t: number) => [number, number],
+    thickness: number,
+    intensity: number
+  ) => {
+    const steps = 80;
+    for (let i = 0; i < steps; i++) {
+      const t = i / (steps - 1);
+      const [cx, cy] = pathFn(t);
+      const r = thickness / 2;
+      for (let dy = -Math.ceil(r); dy <= Math.ceil(r); dy++) {
+        for (let dx = -Math.ceil(r); dx <= Math.ceil(r); dx++) {
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > r) continue;
+          const x = Math.round(cx + dx);
+          const y = Math.round(cy + dy);
+          if (x < 0 || x >= MNIST_DIM || y < 0 || y >= MNIST_DIM) continue;
+          const falloff = 1 - dist / (r + 0.5);
+          const v = intensity * falloff;
+          const idx = y * MNIST_DIM + x;
+          pixels[idx] = Math.min(1, pixels[idx] + v);
         }
       }
     }
+  };
+
+  // jitter for realism
+  const jx = (rand() - 0.5) * 2;
+  const jy = (rand() - 0.5) * 2;
+  const scale = 0.85 + rand() * 0.3;
+  const cx = 14 + jx;
+  const cy = 14 + jy;
+  const intensity = 0.7 + rand() * 0.3;
+
+  if (label === 0) {
+    // "digit 3" — two stacked curves opening left
+    const topR = 5 * scale;
+    const botR = 5 * scale;
+    drawStroke(
+      (t) => {
+        const theta = -Math.PI / 2 + t * Math.PI * 1.4;
+        return [cx + Math.cos(theta) * topR, cy - 4 + Math.sin(theta) * topR];
+      },
+      2.5,
+      intensity
+    );
+    drawStroke(
+      (t) => {
+        const theta = -Math.PI / 2 + t * Math.PI * 1.4;
+        return [cx + Math.cos(theta) * botR, cy + 4 + Math.sin(theta) * botR];
+      },
+      2.5,
+      intensity
+    );
   } else {
-    // "digit B" — vertical stroke + closed loop
-    const cx = 10 + Math.floor(rand() * 6);
-    for (let y = 5; y < 23; y++) {
-      pixels[y * MNIST_DIM + cx] = 0.8 + rand() * 0.2;
-      if (rand() > 0.5) pixels[y * MNIST_DIM + cx + 1] = 0.7;
-    }
-    // loop on top
-    const loopY = 6 + Math.floor(rand() * 4);
-    const loopR = 3 + Math.floor(rand() * 2);
-    for (let theta = 0; theta < Math.PI * 2; theta += 0.2) {
-      const px = Math.round(cx + loopR * Math.cos(theta));
-      const py = Math.round(loopY + loopR * 0.7 * Math.sin(theta));
-      if (px >= 0 && px < MNIST_DIM && py >= 0 && py < MNIST_DIM) {
-        pixels[py * MNIST_DIM + px] = 0.8 + rand() * 0.2;
-      }
-    }
+    // "digit 8" — two stacked loops
+    const topR = 4 * scale;
+    const botR = 5 * scale;
+    drawStroke(
+      (t) => {
+        const theta = t * Math.PI * 2;
+        return [cx + Math.cos(theta) * topR, cy - 4 + Math.sin(theta) * topR];
+      },
+      2,
+      intensity
+    );
+    drawStroke(
+      (t) => {
+        const theta = t * Math.PI * 2;
+        return [cx + Math.cos(theta) * botR, cy + 4.5 + Math.sin(theta) * botR];
+      },
+      2,
+      intensity
+    );
   }
 
-  // light noise everywhere
+  // realistic noise — gentle ambient + occasional speckle
   for (let i = 0; i < pixels.length; i++) {
-    pixels[i] = Math.max(0, Math.min(1, pixels[i] + (rand() - 0.5) * 0.05));
+    pixels[i] = Math.max(0, Math.min(1, pixels[i] + (rand() - 0.5) * 0.04));
+    if (rand() < 0.005) {
+      pixels[i] = Math.min(1, pixels[i] + rand() * 0.3);
+    }
   }
 
   return pixels;
@@ -84,7 +128,7 @@ function mulberry32(seed: number): () => number {
  * generates a fresh mnist-like dataset of nExamples.
  * roughly balanced between class 0 and class 1.
  */
-export function generateMnistDataset(nExamples: number = 1000): MnistExample[] {
+export function generateMnistDataset(nExamples: number = 1500): MnistExample[] {
   const examples: MnistExample[] = [];
   for (let i = 0; i < nExamples; i++) {
     const label: 0 | 1 = i % 2 === 0 ? 0 : 1;
